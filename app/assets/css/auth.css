@@ -1,0 +1,116 @@
+.auth-page {
+  min-height: calc(100vh - var(--header-height) - 4rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 6%);
+}
+
+.auth-card__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.auth-card__subtitle {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth-field {
+  margin-bottom: 1rem;
+}
+
+.auth-field label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #374151;
+}
+
+.auth-field input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.auth-field input:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+}
+
+.auth-field__row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.auth-field__row input {
+  flex: 1;
+}
+
+.auth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.auth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-btn--primary {
+  background: var(--color-accent);
+  color: #fff;
+  margin-top: 0.5rem;
+}
+
+.auth-btn--primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.auth-btn--ghost {
+  flex-shrink: 0;
+  width: auto;
+  padding: 0.65rem 0.85rem;
+  background: #f3f4f6;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.auth-btn--ghost:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.auth-error {
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.85rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}

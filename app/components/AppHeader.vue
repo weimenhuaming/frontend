@@ -33,8 +33,7 @@ function isActive(path: string) {
         </NuxtLink>
       </nav>
 
-      <!-- 加入头像个人信息，登入操作 -->
-
+      <NavUserArea />
     </div>
   </header>
 </template>
