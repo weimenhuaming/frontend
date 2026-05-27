@@ -1,4 +1,4 @@
-import type { EmailReq, EmailResp } from '../../types/auth'
+import type { EmailReq, EmailResp } from '#shared/types/auth'
 import { proxyToBackend } from '../../utils/backend'
 
 export default defineEventHandler(async (event) => {

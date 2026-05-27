@@ -1,4 +1,4 @@
-import type { AuthUser, EmailResp, LoginResp } from '~/types/auth'
+import type { AuthUser, EmailResp, LoginResp } from '#shared/types/auth'
 
 const STORAGE_USER = 'chenaqi_auth_user'
 const STORAGE_TOKEN = 'chenaqi_access_token'

@@ -1,4 +1,4 @@
-import type { LogoutResp } from '../../types/auth'
+import type { LogoutResp } from '#shared/types/auth'
 import { proxyToBackend } from '../../utils/backend'
 
 export default defineEventHandler(async (event) => {
