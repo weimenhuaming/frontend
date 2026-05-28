@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { emailLogin, sendVerificationCode } from '~/api/auth'
+import { useAuthStore } from '~/stores/auth'
+import { isSixDigitCode, isValidQqEmail } from '~/utils/validation'
+
 useSeoMeta({ title: '登录' })
 
 const route = useRoute()
 const router = useRouter()
-const auth = useAuth()
+const authStore = useAuthStore()
 
 const email = ref('')
 const captcha = ref('')
@@ -15,13 +19,9 @@ const sentHint = ref('')
 
 let timer: ReturnType<typeof setInterval> | null = null
 
-function isValidQqEmail(value: string) {
-  return /^[^\s@]+@qq\.com$/i.test(value.trim())
-}
-
 onMounted(() => {
-  auth.hydrate()
-  if (auth.isLoggedIn.value) {
+  authStore.hydrate()
+  if (authStore.isLoggedIn) {
     navigateTo(String(route.query.redirect || '/'))
   }
 })
@@ -56,7 +56,7 @@ async function onSendCode() {
 
   sending.value = true
   try {
-    await auth.sendEmailCode(emailValue)
+    await sendVerificationCode(emailValue)
     sentHint.value = `验证码已发送至 ${emailValue}，请查收 QQ 邮箱（含垃圾箱）`
     startCountdown()
   }
@@ -78,14 +78,15 @@ async function onSubmit() {
     error.value = '请输入用于接收验证码的 QQ 邮箱（@qq.com）'
     return
   }
-  if (!/^\d{6}$/.test(codeValue)) {
+  if (!isSixDigitCode(codeValue)) {
     error.value = '请填写邮箱收到的 6 位数字验证码'
     return
   }
 
   loading.value = true
   try {
-    await auth.login(emailValue, codeValue)
+    const data = await emailLogin({ email: emailValue, captcha: codeValue })
+    authStore.setSession(data)
     await router.push(String(route.query.redirect || '/'))
   }
   catch (e: unknown) {
