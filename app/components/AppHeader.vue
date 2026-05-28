@@ -5,6 +5,7 @@ const navItems = [
   { label: '首页', to: '/' },
   { label: '博客', to: '/blog' },
   { label: '关于', to: '/about' },
+  { label: '智能助手', to: '/agent' },
 ]
 
 function isActive(path: string) {
