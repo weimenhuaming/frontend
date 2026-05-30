@@ -1,15 +1,15 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'home' })
+
+useSeoMeta({ title: '关于网站 · Chenaqi Blog' })
 </script>
 
 <template>
-  <div class="container">
-    <header class="page-header">
-      <h1 class="page-header__title">关于</h1>
-    </header>
-
-    <article class="about">
+  <div class="subpage subpage--article">
+    <article class="subpage__article card">
+      <h1 class="subpage__title">关于网站</h1>
       <p>
-        你好，我是 cxy。
+        你好，我是 Chenaqi。
         这个博客用于记录我在技术、创作与生活中的思考与实践。
       </p>
       <p>
@@ -20,24 +20,33 @@
 </template>
 
 <style scoped>
-.page-header {
-  margin-bottom: 2rem;
+.subpage--article {
+  max-width: 42rem;
 }
 
-.page-header__title {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: 800;
+.card {
+  background: rgb(255 255 255 / 70%);
+  backdrop-filter: blur(14px);
+  border-radius: 22px;
+  border: 1px solid rgb(255 255 255 / 80%);
+  box-shadow: 0 6px 24px var(--home-shadow);
 }
 
-.about {
-  max-width: 40rem;
+.subpage__article {
+  padding: 2rem 2.25rem;
   font-size: 1.0625rem;
   line-height: 1.8;
-  color: var(--color-text);
+  color: #374151;
 }
 
-.about p + p {
+.subpage__title {
+  margin: 0 0 1.25rem;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.subpage__article p + p {
   margin-top: 1rem;
 }
 </style>

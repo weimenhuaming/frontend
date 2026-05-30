@@ -1,36 +1,43 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'home' })
 
-useSeoMeta({ title: '近期文章 · Chenaqi Blog' })
+useSeoMeta({ title: '推荐分享 · Chenaqi Blog' })
 
 const searchTerm = ref('')
 const selectedTag = ref('all')
 
-const tags = ['前端', '后端', '笔记', '生活']
+const tags = ['图片', 'AI', 'CSS', 'Github', '工具']
 
-const articles = [
+const shares = [
   {
-    slug: 'hello-world',
-    title: 'Hello World',
-    summary: '博客的第一篇文章，记录搭建这个站点的一些想法。',
-    date: '2025-05-18',
-    tags: ['笔记'],
+    name: 'iLoveIMG',
+    url: 'https://www.iloveimg.com',
+    description: '在线图片压缩、裁剪、格式转换等常用工具集合。',
+    rating: 5,
+    tags: ['图片', '工具'],
   },
   {
-    slug: 'nuxt-home',
-    title: 'Nuxt 首页布局改造',
-    summary: '参考 YYSuni 的博客，把 bento 导航收拢到左上角。',
-    date: '2025-05-30',
-    tags: ['前端'],
+    name: 'Cursor',
+    url: 'https://cursor.com',
+    description: 'AI 驱动的代码编辑器，适合日常开发与 Agent 协作。',
+    rating: 5,
+    tags: ['AI', '工具'],
+  },
+  {
+    name: 'GitHub',
+    url: 'https://github.com',
+    description: '开源代码托管与协作平台。',
+    rating: 5,
+    tags: ['Github'],
   },
 ]
 
-const filteredArticles = computed(() => {
-  return articles.filter((article) => {
+const filteredShares = computed(() => {
+  return shares.filter((share) => {
     const matchesSearch = !searchTerm.value
-      || article.title.toLowerCase().includes(searchTerm.value.toLowerCase())
-      || article.summary.toLowerCase().includes(searchTerm.value.toLowerCase())
-    const matchesTag = selectedTag.value === 'all' || article.tags.includes(selectedTag.value)
+      || share.name.toLowerCase().includes(searchTerm.value.toLowerCase())
+      || share.description.toLowerCase().includes(searchTerm.value.toLowerCase())
+    const matchesTag = selectedTag.value === 'all' || share.tags.includes(selectedTag.value)
     return matchesSearch && matchesTag
   })
 })
@@ -43,7 +50,7 @@ const filteredArticles = computed(() => {
         v-model="searchTerm"
         type="search"
         class="subpage__search"
-        placeholder="搜索文章..."
+        placeholder="搜索资源..."
       >
 
       <div class="subpage__tags">
@@ -70,32 +77,52 @@ const filteredArticles = computed(() => {
 
     <div class="subpage__grid">
       <article
-        v-for="article in filteredArticles"
-        :key="article.slug"
+        v-for="share in filteredShares"
+        :key="share.url"
         class="subpage__card card"
       >
         <div class="subpage__card-head">
-          <div class="subpage__card-icon" aria-hidden="true">📝</div>
-          <div>
-            <h2 class="subpage__card-title">{{ article.title }}</h2>
-            <p class="subpage__card-date">{{ article.date }}</p>
+          <div class="subpage__card-icon" aria-hidden="true">🔗</div>
+          <div class="subpage__card-meta">
+            <h2 class="subpage__card-title">{{ share.name }}</h2>
+            <a
+              :href="share.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="subpage__card-url"
+            >
+              {{ share.url }}
+            </a>
           </div>
         </div>
-        <p class="subpage__card-desc">{{ article.summary }}</p>
+
+        <div class="subpage__stars" aria-label="评分">
+          <span
+            v-for="star in 5"
+            :key="star"
+            class="subpage__star"
+            :class="{ 'subpage__star--filled': star <= share.rating }"
+          >
+            ★
+          </span>
+        </div>
+
         <div class="subpage__card-tags">
           <span
-            v-for="tag in article.tags"
+            v-for="tag in share.tags"
             :key="tag"
             class="subpage__card-tag"
           >
             {{ tag }}
           </span>
         </div>
+
+        <p class="subpage__card-desc">{{ share.description }}</p>
       </article>
     </div>
 
-    <p v-if="filteredArticles.length === 0" class="subpage__empty">
-      没有找到相关文章
+    <p v-if="filteredShares.length === 0" class="subpage__empty">
+      没有找到相关资源
     </p>
   </div>
 </template>
@@ -181,7 +208,7 @@ const filteredArticles = computed(() => {
   display: flex;
   gap: 0.85rem;
   align-items: flex-start;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .subpage__card-icon {
@@ -194,6 +221,10 @@ const filteredArticles = computed(() => {
   font-size: 1.1rem;
 }
 
+.subpage__card-meta {
+  min-width: 0;
+}
+
 .subpage__card-title {
   margin: 0;
   font-size: 1rem;
@@ -201,14 +232,34 @@ const filteredArticles = computed(() => {
   color: #1a1a1a;
 }
 
-.subpage__card-date {
-  margin: 0.2rem 0 0;
-  font-size: 0.75rem;
-  color: #9ca3af;
+.subpage__card-url {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--home-accent-dark);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subpage__stars {
+  display: flex;
+  gap: 0.15rem;
+  margin-bottom: 0.55rem;
+}
+
+.subpage__star {
+  color: #d1d5db;
+  font-size: 0.85rem;
+}
+
+.subpage__star--filled {
+  color: #fbbf24;
 }
 
 .subpage__card-desc {
-  margin: 0;
+  margin: 0.75rem 0 0;
   font-size: 0.875rem;
   line-height: 1.55;
   color: #6b7280;
@@ -218,7 +269,6 @@ const filteredArticles = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-top: 0.85rem;
 }
 
 .subpage__card-tag {

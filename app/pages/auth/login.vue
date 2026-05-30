@@ -3,6 +3,8 @@ import { emailLogin, sendVerificationCode } from '~/api/auth'
 import { useAuthStore } from '~/stores/auth'
 import { isSixDigitCode, isValidQqEmail } from '~/utils/validation'
 
+definePageMeta({ layout: 'home' })
+
 useSeoMeta({ title: '登录' })
 
 const route = useRoute()
@@ -99,85 +101,95 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="signin">
-    <section class="signin__panel signin__panel--intro">
-      <p class="signin__badge">邮箱验证码登录</p>
-      <h1 class="signin__title">欢迎回来</h1>
-      <p class="signin__desc">
-        使用 QQ 邮箱接收一次性验证码，无需密码，安全快捷。
-      </p>
-      <ul class="signin__steps">
-        <li>填写 QQ 邮箱地址</li>
-        <li>点击发送验证码</li>
-        <li>输入邮件中的 6 位码并登录</li>
-      </ul>
-    </section>
-
-    <section class="signin__panel signin__panel--form">
-      <form class="signin__form" @submit.prevent="onSubmit">
-        <h2 class="signin__form-title">账号登录</h2>
-
-        <p v-if="error" class="signin__alert signin__alert--error">
-          {{ error }}
+  <div class="subpage subpage--signin">
+    <div class="signin card">
+      <section class="signin__panel signin__panel--intro">
+        <p class="signin__badge">邮箱验证码登录</p>
+        <h1 class="signin__title">欢迎回来</h1>
+        <p class="signin__desc">
+          使用 QQ 邮箱接收一次性验证码，无需密码，安全快捷。
         </p>
-        <p v-else-if="sentHint" class="signin__alert signin__alert--success">
-          {{ sentHint }}
-        </p>
+        <ul class="signin__steps">
+          <li>填写 QQ 邮箱地址</li>
+          <li>点击发送验证码</li>
+          <li>输入邮件中的 6 位码并登录</li>
+        </ul>
+      </section>
 
-        <label class="signin__field">
-          <span class="signin__label">QQ 邮箱</span>
-          <input
-            v-model="email"
-            type="email"
-            inputmode="email"
-            autocomplete="email"
-            placeholder="123456@qq.com"
-            required
-          >
-        </label>
+      <section class="signin__panel signin__panel--form">
+        <form class="signin__form" @submit.prevent="onSubmit">
+          <h2 class="signin__form-title">账号登录</h2>
 
-        <label class="signin__field">
-          <span class="signin__label">验证码</span>
-          <div class="signin__code-row">
+          <p v-if="error" class="signin__alert signin__alert--error">
+            {{ error }}
+          </p>
+          <p v-else-if="sentHint" class="signin__alert signin__alert--success">
+            {{ sentHint }}
+          </p>
+
+          <label class="signin__field">
+            <span class="signin__label">QQ 邮箱</span>
             <input
-              v-model="captcha"
-              type="text"
-              inputmode="numeric"
-              maxlength="6"
-              autocomplete="one-time-code"
-              placeholder="6 位数字"
+              v-model="email"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              placeholder="123456@qq.com"
               required
             >
-            <button
-              type="button"
-              class="signin__send"
-              :disabled="sending || countdown > 0"
-              @click="onSendCode"
-            >
-              {{ countdown > 0 ? `${countdown}s 后重发` : (sending ? '发送中…' : '发送验证码') }}
-            </button>
-          </div>
-        </label>
+          </label>
 
-        <button type="submit" class="signin__submit" :disabled="loading">
-          {{ loading ? '登录中…' : '登录' }}
-        </button>
-      </form>
-    </section>
+          <label class="signin__field">
+            <span class="signin__label">验证码</span>
+            <div class="signin__code-row">
+              <input
+                v-model="captcha"
+                type="text"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+                placeholder="6 位数字"
+                required
+              >
+              <button
+                type="button"
+                class="signin__send"
+                :disabled="sending || countdown > 0"
+                @click="onSendCode"
+              >
+                {{ countdown > 0 ? `${countdown}s 后重发` : (sending ? '发送中…' : '发送验证码') }}
+              </button>
+            </div>
+          </label>
+
+          <button type="submit" class="signin__submit" :disabled="loading">
+            {{ loading ? '登录中…' : '登录' }}
+          </button>
+        </form>
+      </section>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.subpage--signin {
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+.card {
+  background: rgb(255 255 255 / 70%);
+  backdrop-filter: blur(14px);
+  border-radius: 22px;
+  border: 1px solid rgb(255 255 255 / 80%);
+  box-shadow: 0 6px 24px var(--home-shadow);
+}
+
 .signin {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  min-height: calc(100vh - var(--header-height) - 4rem);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
   overflow: hidden;
-  background: var(--color-surface);
-  box-shadow: 0 20px 50px rgb(15 23 42 / 8%);
 }
 
 .signin__panel {
@@ -185,7 +197,7 @@ async function onSubmit() {
 }
 
 .signin__panel--intro {
-  background: linear-gradient(145deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
+  background: linear-gradient(145deg, #0d9488 0%, #14b8a6 55%, #2dd4bf 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -239,7 +251,7 @@ async function onSubmit() {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #bfdbfe;
+  background: var(--home-accent-light);
 }
 
 .signin__panel--form {
@@ -257,6 +269,7 @@ async function onSubmit() {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 1.25rem;
+  color: #1a1a1a;
 }
 
 .signin__alert {
@@ -273,8 +286,8 @@ async function onSubmit() {
 }
 
 .signin__alert--success {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--home-accent-pale);
+  color: var(--home-accent-dark);
 }
 
 .signin__field {
@@ -293,16 +306,17 @@ async function onSubmit() {
 .signin__field input {
   width: 100%;
   padding: 0.7rem 0.9rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgb(255 255 255 / 80%);
   border-radius: 10px;
+  background: rgb(255 255 255 / 55%);
   font-size: 0.9375rem;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .signin__field input:focus {
-  border-color: #93c5fd;
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+  border-color: var(--home-accent);
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 18%);
 }
 
 .signin__code-row {
@@ -318,10 +332,10 @@ async function onSubmit() {
 .signin__send {
   flex-shrink: 0;
   padding: 0 0.9rem;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--home-accent-soft);
   border-radius: 10px;
-  background: #eff6ff;
-  color: var(--color-accent);
+  background: var(--home-accent-pale);
+  color: var(--home-accent-dark);
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
@@ -330,7 +344,7 @@ async function onSubmit() {
 }
 
 .signin__send:hover:not(:disabled) {
-  background: #dbeafe;
+  background: var(--home-accent-light);
 }
 
 .signin__send:disabled {
@@ -344,7 +358,7 @@ async function onSubmit() {
   padding: 0.75rem 1rem;
   border: none;
   border-radius: 10px;
-  background: var(--color-accent);
+  background: var(--home-accent);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -353,7 +367,7 @@ async function onSubmit() {
 }
 
 .signin__submit:hover:not(:disabled) {
-  background: var(--color-accent-hover);
+  background: var(--home-accent-dark);
 }
 
 .signin__submit:disabled {
