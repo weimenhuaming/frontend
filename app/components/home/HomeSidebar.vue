@@ -5,9 +5,9 @@ const auth = useAuth()
 const navItems = [
   { label: '站内助手', to: '/agent', icon: 'ai' },
   { label: '个人中心', to: '/user', icon: 'user' },
+  { label: '创作管理', to: '/admin', icon: 'admin' },
   { label: '文章专栏', to: '/blog', icon: 'article' },
   { label: '关于网站', to: '/about', icon: 'about' },
-  { label: '推荐分享', to: '/share', icon: 'share' },
 ]
 
 const isHome = computed(() => route.path === '/')

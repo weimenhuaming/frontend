@@ -7,6 +7,19 @@ definePageMeta({
 useSeoMeta({ title: '个人中心 · Chenaqi Blog' })
 
 const auth = useAuth()
+const router = useRouter()
+const loggingOut = ref(false)
+
+async function onLogout() {
+  loggingOut.value = true
+  try {
+    await auth.logout()
+    await router.push('/')
+  }
+  finally {
+    loggingOut.value = false
+  }
+}
 </script>
 
 <template>
@@ -25,6 +38,15 @@ const auth = useAuth()
           <dd>{{ auth.user.role }}</dd>
         </dl>
       </div>
+
+      <button
+        type="button"
+        class="subpage__logout"
+        :disabled="loggingOut"
+        @click="onLogout"
+      >
+        {{ loggingOut ? '退出中…' : '退出登录' }}
+      </button>
     </article>
   </div>
 </template>
@@ -84,5 +106,28 @@ const auth = useAuth()
   margin: 0;
   font-weight: 600;
   color: #1a1a1a;
+}
+
+.subpage__logout {
+  margin-top: 1.5rem;
+  padding: 0.65rem 1.25rem;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.subpage__logout:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.subpage__logout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
