@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/admin.css'],
 
   modules: ['@pinia/nuxt'],
 
@@ -12,6 +12,7 @@ export default defineNuxtConfig({
    */
   routeRules: {
     '/api/**': { proxy: 'http://127.0.0.1:9000/**' },
+    '/admin/categories': { redirect: '/admin' },
   },
 
   runtimeConfig: {

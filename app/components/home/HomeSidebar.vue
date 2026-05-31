@@ -34,17 +34,56 @@ watch(activeIndex, (index) => {
   hoveredIndex.value = index
 })
 
+watch(() => route.path, () => {
+  navHidden.value = false
+  lastScrollY = window.scrollY
+})
+
 function isActive(path: string) {
   return route.path.startsWith(path)
 }
 
-onMounted(() => auth.hydrate())
+const navHidden = ref(false)
+let lastScrollY = 0
+
+function onScroll() {
+  if (!isCompact.value)
+    return
+
+  const currentScrollY = window.scrollY
+
+  if (currentScrollY <= 64) {
+    navHidden.value = false
+  }
+  else if (currentScrollY > lastScrollY + 8) {
+    navHidden.value = true
+  }
+  else if (currentScrollY < lastScrollY - 8) {
+    navHidden.value = false
+  }
+
+  lastScrollY = currentScrollY
+}
+
+onMounted(() => {
+  auth.hydrate()
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+})
 </script>
 
 <template>
   <aside
     class="home-nav"
-    :class="{ 'home-nav--compact': isCompact, 'home-nav--full': !isCompact }"
+    :class="{
+      'home-nav--compact': isCompact,
+      'home-nav--full': !isCompact,
+      'home-nav--hidden': isCompact && navHidden,
+    }"
     aria-label="站点导航"
   >
     <div class="home-nav__panel card">
@@ -166,7 +205,9 @@ onMounted(() => auth.hydrate())
   transition:
     top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
     left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .home-nav--compact {
@@ -175,6 +216,12 @@ onMounted(() => auth.hydrate())
   left: 1.5rem;
   z-index: 100;
   width: auto;
+}
+
+.home-nav--compact.home-nav--hidden {
+  transform: translateY(calc(-100% - 1.5rem));
+  opacity: 0;
+  pointer-events: none;
 }
 
 .home-nav__panel {
@@ -375,6 +422,10 @@ onMounted(() => auth.hydrate())
     left: 50%;
     transform: translateX(-50%);
     width: min(calc(100% - 2rem), 24rem);
+  }
+
+  .home-nav--compact.home-nav--hidden {
+    transform: translate(-50%, calc(-100% - 1.5rem));
   }
 
   .home-nav--compact .home-nav__panel {

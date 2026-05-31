@@ -1,39 +1,85 @@
 <script setup lang="ts">
+import { getArticlesByCategory, listArticles, searchArticles } from '~/api/article'
+import { listCategories } from '~/api/category'
+
 definePageMeta({ layout: 'home' })
 
 useSeoMeta({ title: '近期文章 · Chenaqi Blog' })
 
+const PAGE_SIZE = 20
+
 const searchTerm = ref('')
-const selectedTag = ref('all')
+const debouncedSearch = ref('')
+const selectedCategoryId = ref<number | 'all'>('all')
 
-const tags = ['前端', '后端', '笔记', '生活']
+let searchTimer: ReturnType<typeof setTimeout> | null = null
 
-const articles = [
-  {
-    slug: 'hello-world',
-    title: 'Hello World',
-    summary: '博客的第一篇文章，记录搭建这个站点的一些想法。',
-    date: '2025-05-18',
-    tags: ['笔记'],
-  },
-  {
-    slug: 'nuxt-home',
-    title: 'Nuxt 首页布局改造',
-    summary: '参考 YYSuni 的博客，把 bento 导航收拢到左上角。',
-    date: '2025-05-30',
-    tags: ['前端'],
-  },
-]
-
-const filteredArticles = computed(() => {
-  return articles.filter((article) => {
-    const matchesSearch = !searchTerm.value
-      || article.title.toLowerCase().includes(searchTerm.value.toLowerCase())
-      || article.summary.toLowerCase().includes(searchTerm.value.toLowerCase())
-    const matchesTag = selectedTag.value === 'all' || article.tags.includes(selectedTag.value)
-    return matchesSearch && matchesTag
-  })
+watch(searchTerm, (value) => {
+  if (searchTimer)
+    clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    debouncedSearch.value = value
+  }, 300)
 })
+
+onUnmounted(() => {
+  if (searchTimer)
+    clearTimeout(searchTimer)
+})
+
+const { data: categoriesData } = await useAsyncData('blog-categories', () => listCategories())
+
+const categories = computed(() => categoriesData.value?.categories ?? [])
+
+const categoryNameMap = computed(() => {
+  const map = new Map<number, string>()
+  for (const category of categories.value)
+    map.set(category.id, category.name)
+  return map
+})
+
+async function fetchArticles() {
+  const keyword = debouncedSearch.value.trim()
+  const categoryId = selectedCategoryId.value
+
+  if (keyword) {
+    return searchArticles({
+      keyword,
+      page: 1,
+      page_size: PAGE_SIZE,
+      ...(categoryId !== 'all' ? { category_id: categoryId } : {}),
+    })
+  }
+
+  if (categoryId !== 'all') {
+    return getArticlesByCategory({
+      category_id: categoryId,
+      page: 1,
+      page_size: PAGE_SIZE,
+    })
+  }
+
+  return listArticles({
+    page: 1,
+    page_size: PAGE_SIZE,
+  })
+}
+
+const { data: articlesData, pending, error } = await useAsyncData(
+  'blog-articles',
+  fetchArticles,
+  { watch: [selectedCategoryId, debouncedSearch] },
+)
+
+const articles = computed(() => articlesData.value?.articles ?? [])
+
+function formatDate(dateStr: string) {
+  return dateStr ? dateStr.slice(0, 10) : ''
+}
+
+function getCategoryName(categoryId: number) {
+  return categoryNameMap.value.get(categoryId) ?? ''
+}
 </script>
 
 <template>
@@ -50,57 +96,66 @@ const filteredArticles = computed(() => {
         <button
           type="button"
           class="subpage__tag"
-          :class="{ 'subpage__tag--active': selectedTag === 'all' }"
-          @click="selectedTag = 'all'"
+          :class="{ 'subpage__tag--active': selectedCategoryId === 'all' }"
+          @click="selectedCategoryId = 'all'"
         >
           全部
         </button>
         <button
-          v-for="tag in tags"
-          :key="tag"
+          v-for="category in categories"
+          :key="category.id"
           type="button"
           class="subpage__tag"
-          :class="{ 'subpage__tag--active': selectedTag === tag }"
-          @click="selectedTag = tag"
+          :class="{ 'subpage__tag--active': selectedCategoryId === category.id }"
+          @click="selectedCategoryId = category.id"
         >
-          {{ tag }}
+          {{ category.name }}
         </button>
       </div>
     </header>
 
-    <div class="subpage__grid">
-      <article
-        v-for="article in filteredArticles"
-        :key="article.slug"
+    <p v-if="pending" class="subpage__empty">
+      加载中...
+    </p>
+
+    <p v-else-if="error" class="subpage__empty">
+      {{ error.message || '加载文章失败' }}
+    </p>
+
+    <div v-else class="subpage__grid">
+      <NuxtLink
+        v-for="article in articles"
+        :key="article.id"
+        :to="`/blog/${article.id}`"
         class="subpage__card card"
       >
         <div class="subpage__card-head">
           <div class="subpage__card-icon" aria-hidden="true">📝</div>
           <div>
             <h2 class="subpage__card-title">{{ article.title }}</h2>
-            <p class="subpage__card-date">{{ article.date }}</p>
+            <p class="subpage__card-date">{{ formatDate(article.created_at) }}</p>
           </div>
         </div>
         <p class="subpage__card-desc">{{ article.summary }}</p>
-        <div class="subpage__card-tags">
-          <span
-            v-for="tag in article.tags"
-            :key="tag"
-            class="subpage__card-tag"
-          >
-            {{ tag }}
+        <div v-if="getCategoryName(article.category_id)" class="subpage__card-tags">
+          <span class="subpage__card-tag">
+            {{ getCategoryName(article.category_id) }}
           </span>
         </div>
-      </article>
+      </NuxtLink>
     </div>
 
-    <p v-if="filteredArticles.length === 0" class="subpage__empty">
+    <p v-if="!pending && !error && articles.length === 0" class="subpage__empty">
       没有找到相关文章
     </p>
   </div>
 </template>
 
 <style scoped>
+.subpage {
+  margin-top: -1cm;
+}
+
 .subpage__header {
   display: flex;
   flex-direction: column;
@@ -168,7 +223,11 @@ const filteredArticles = computed(() => {
 }
 
 .subpage__card {
+  display: block;
   padding: 1.1rem 1.15rem;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
