@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const apiProxyTarget = process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:9000'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -11,7 +13,7 @@ export default defineNuxtConfig({
    * 生产环境若前后端分域部署，请设置 NUXT_PUBLIC_API_BASE 并确保后端正确处理 OPTIONS。
    */
   routeRules: {
-    '/api/**': { proxy: 'http://127.0.0.1:9000/**' },
+    '/api/**': { proxy: `${apiProxyTarget}/**` },
     '/admin/categories': { redirect: '/admin' },
   },
 
