@@ -40,9 +40,32 @@ const renderedContent = computed(() => markdownResult.value.html)
 const tableOfContents = computed(() => markdownResult.value.headings)
 
 const showBackTop = ref(false)
+const commentCount = ref(0)
+
+const articleLike = useLikeToggle({
+  type: 'article',
+  id: () => articleId.value ?? 0,
+  initialCount: () => article.value?.like_count ?? 0,
+})
+
+const articleLiked = computed(() => articleLike.liked.value)
+const articleLikeCount = computed(() => articleLike.likeCount.value)
+
+watch(
+  () => article.value?.comment_count,
+  (count) => {
+    if (typeof count === 'number')
+      commentCount.value = count
+  },
+  { immediate: true },
+)
 
 function onScroll() {
   showBackTop.value = window.scrollY > 400
+}
+
+function scrollToComments() {
+  document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function scrollToTop() {
@@ -192,6 +215,12 @@ function formatDate(dateStr: string) {
       </aside>
     </div>
 
+    <CommentSection
+      v-if="article && articleId"
+      :article-id="articleId"
+      @count-change="commentCount += $event"
+    />
+
     <div v-if="article" class="article-page__float-actions" aria-label="文章互动">
       <div class="article-page__float-stat card" title="阅读量">
         <span class="article-page__float-count">{{ article.view_count }}</span>
@@ -203,23 +232,42 @@ function formatDate(dateStr: string) {
         </span>
       </div>
 
-      <div class="article-page__float-stat card" title="评论数">
-        <span class="article-page__float-count">{{ article.comment_count }}</span>
+      <button
+        type="button"
+        class="article-page__float-stat article-page__float-stat--btn card"
+        title="查看评论"
+        aria-label="查看评论"
+        @click="scrollToComments"
+      >
+        <span class="article-page__float-count">{{ commentCount }}</span>
         <span class="article-page__float-icon article-page__float-icon--comment" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
           </svg>
         </span>
-      </div>
+      </button>
 
-      <div class="article-page__float-stat card" title="点赞数">
-        <span class="article-page__float-count article-page__float-count--like">{{ article.like_count }}</span>
+      <button
+        type="button"
+        class="article-page__float-stat article-page__float-stat--btn card"
+        :class="{ 'article-page__float-stat--liked': articleLiked }"
+        title="点赞"
+        aria-label="点赞"
+        :aria-pressed="articleLiked"
+        @click="articleLike.toggle"
+      >
+        <span
+          class="article-page__float-count article-page__float-count--like"
+          :class="{ 'article-page__float-count--liked': articleLiked }"
+        >
+          {{ articleLikeCount }}
+        </span>
         <span class="article-page__float-icon article-page__float-icon--like" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
           </svg>
         </span>
-      </div>
+      </button>
 
       <Transition name="back-top">
         <button
@@ -624,6 +672,18 @@ function formatDate(dateStr: string) {
 
 .article-page__float-stat--btn:hover {
   transform: scale(1.05);
+}
+
+.article-page__float-stat--btn .article-page__float-count {
+  pointer-events: none;
+}
+
+.article-page__float-stat--liked .article-page__float-icon--like {
+  color: #fb7185;
+}
+
+.article-page__float-count--liked {
+  background: #fb7185;
 }
 
 .article-page__float-stat--btn:active {

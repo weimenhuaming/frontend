@@ -3,7 +3,7 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 /** 项目 API 实际会用到的请求选项（避免与 Nitro $fetch 类型冲突） */
 export interface RequestOptions {
   method?: HttpMethod
-  body?: Record<string, unknown> | BodyInit | null
+  body?: object | BodyInit | null
   query?: Record<string, unknown>
   headers?: Record<string, string>
 }
