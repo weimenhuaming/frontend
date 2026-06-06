@@ -14,7 +14,7 @@ export default defineNuxtConfig({
    */
   routeRules: {
     '/api/**': { proxy: `${apiProxyTarget}/**` },
-    '/admin/categories': { redirect: '/admin' },
+    '/user': { redirect: '/admin/profile' },
   },
 
   runtimeConfig: {

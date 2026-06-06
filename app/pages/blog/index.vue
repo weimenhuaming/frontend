@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { getArticlesByCategory, listArticles, searchArticles } from '~/api/article'
 import { listCategories } from '~/api/category'
+import { resolveMediaUrl } from '~/utils/media'
 
 definePageMeta({ layout: 'home' })
 
 useSeoMeta({ title: '近期文章 · Chenaqi Blog' })
+
+const config = useRuntimeConfig()
 
 const PAGE_SIZE = 20
 
@@ -80,6 +83,10 @@ function formatDate(dateStr: string) {
 function getCategoryName(categoryId: number) {
   return categoryNameMap.value.get(categoryId) ?? ''
 }
+
+function getCoverUrl(cover: string) {
+  return resolveMediaUrl(cover, config.public.apiBase)
+}
 </script>
 
 <template>
@@ -129,18 +136,31 @@ function getCategoryName(categoryId: number) {
         :to="`/blog/${article.id}`"
         class="subpage__card card"
       >
-        <div class="subpage__card-head">
-          <div class="subpage__card-icon" aria-hidden="true">📝</div>
-          <div>
-            <h2 class="subpage__card-title">{{ article.title }}</h2>
-            <p class="subpage__card-date">{{ formatDate(article.created_at) }}</p>
+        <div class="subpage__card-cover-wrap">
+          <img
+            v-if="getCoverUrl(article.cover)"
+            :src="getCoverUrl(article.cover)"
+            :alt="`${article.title} 封面`"
+            class="subpage__card-cover"
+          >
+          <div v-else class="subpage__card-cover subpage__card-cover--placeholder">
+            <span>{{ getCategoryName(article.category_id) || 'Blog' }}</span>
           </div>
         </div>
-        <p class="subpage__card-desc">{{ article.summary }}</p>
-        <div v-if="getCategoryName(article.category_id)" class="subpage__card-tags">
-          <span class="subpage__card-tag">
-            {{ getCategoryName(article.category_id) }}
-          </span>
+
+        <div class="subpage__card-body">
+          <div class="subpage__card-head">
+            <div>
+              <h2 class="subpage__card-title">{{ article.title }}</h2>
+              <p class="subpage__card-date">{{ formatDate(article.created_at) }}</p>
+            </div>
+          </div>
+          <p class="subpage__card-desc">{{ article.summary }}</p>
+          <div v-if="getCategoryName(article.category_id)" class="subpage__card-tags">
+            <span class="subpage__card-tag">
+              {{ getCategoryName(article.category_id) }}
+            </span>
+          </div>
         </div>
       </NuxtLink>
     </div>
@@ -223,8 +243,9 @@ function getCategoryName(categoryId: number) {
 }
 
 .subpage__card {
-  display: block;
-  padding: 1.1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   color: inherit;
   text-decoration: none;
   cursor: pointer;
@@ -236,21 +257,34 @@ function getCategoryName(categoryId: number) {
   box-shadow: 0 10px 28px var(--home-shadow);
 }
 
-.subpage__card-head {
-  display: flex;
-  gap: 0.85rem;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
+.subpage__card-cover-wrap {
+  width: 100%;
 }
 
-.subpage__card-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 12px;
+.subpage__card-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.subpage__card-cover--placeholder {
   display: grid;
   place-items: center;
-  background: var(--home-accent-pale);
-  font-size: 1.1rem;
+  background: linear-gradient(135deg, var(--home-accent-pale), rgb(255 255 255 / 70%));
+  color: var(--home-accent-dark);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.subpage__card-body {
+  padding: 1.1rem 1.15rem;
+}
+
+.subpage__card-head {
+  margin-bottom: 0.75rem;
 }
 
 .subpage__card-title {

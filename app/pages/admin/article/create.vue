@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { createArticle } from '~/api/article'
 import { listCategories } from '~/api/category'
+import { uploadBlogImage } from '~/api/upload'
 import { renderMarkdown } from '~/utils/markdown'
+import { resolveMediaUrl } from '~/utils/media'
 
 definePageMeta({
   layout: 'admin',
@@ -12,6 +14,7 @@ useSeoMeta({ title: '新建文章 · Chenaqi Blog' })
 
 const auth = useAuth()
 const router = useRouter()
+const config = useRuntimeConfig()
 
 const title = ref('')
 const summary = ref('')
@@ -21,10 +24,14 @@ const content = ref('')
 const editorMode = ref<'edit' | 'split' | 'preview'>('split')
 
 const submitting = ref(false)
+const uploadingCover = ref(false)
 const error = ref('')
 const success = ref('')
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const coverInputRef = ref<HTMLInputElement | null>(null)
+
+const coverPreviewUrl = computed(() => resolveMediaUrl(cover.value, config.public.apiBase))
 
 const { data: categoriesData } = await useAsyncData('admin-create-categories', () => listCategories())
 const categories = computed(() => categoriesData.value?.categories ?? [])
@@ -104,6 +111,39 @@ function onFileChange(event: Event) {
     input.value = ''
   }
   reader.readAsText(file, 'utf-8')
+}
+
+function onCoverClick() {
+  coverInputRef.value?.click()
+}
+
+async function onCoverChange(event: Event) {
+  error.value = ''
+  success.value = ''
+
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file)
+    return
+
+  if (!file.type.startsWith('image/')) {
+    error.value = '请选择图片文件'
+    input.value = ''
+    return
+  }
+
+  uploadingCover.value = true
+  try {
+    cover.value = await uploadBlogImage(file)
+    success.value = '封面已上传'
+  }
+  catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : '封面上传失败'
+  }
+  finally {
+    uploadingCover.value = false
+    input.value = ''
+  }
 }
 
 async function onSubmit() {
@@ -198,10 +238,34 @@ async function onSubmit() {
           />
         </div>
 
-        <label class="create-form__field">
-          <span class="create-form__label">封面链接（可选）</span>
-          <input v-model="cover" type="url" class="create-form__input" placeholder="https://...">
-        </label>
+        <div class="create-form__field">
+          <span class="create-form__label">封面（可选）</span>
+          <div class="create-form__cover">
+            <button
+              type="button"
+              class="create-form__cover-btn"
+              :disabled="uploadingCover"
+              @click="onCoverClick"
+            >
+              <img
+                v-if="coverPreviewUrl"
+                :src="coverPreviewUrl"
+                alt="文章封面预览"
+                class="create-form__cover-preview"
+              >
+              <span v-else class="create-form__cover-placeholder">
+                {{ uploadingCover ? '上传中…' : '点击上传封面' }}
+              </span>
+            </button>
+            <input
+              ref="coverInputRef"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              class="create-form__file-input"
+              @change="onCoverChange"
+            >
+          </div>
+        </div>
       </div>
 
       <div class="create-form__editor">
@@ -401,6 +465,48 @@ async function onSubmit() {
 
 .create-form__file-input {
   display: none;
+}
+
+.create-form__cover {
+  display: flex;
+}
+
+.create-form__cover-btn {
+  width: 100%;
+  min-height: 8.5rem;
+  padding: 0;
+  border: 1px dashed rgb(0 0 0 / 12%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 80%);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.create-form__cover-btn:hover:not(:disabled) {
+  border-color: var(--home-accent);
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 15%);
+}
+
+.create-form__cover-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.create-form__cover-preview {
+  width: 100%;
+  height: 8.5rem;
+  object-fit: cover;
+  display: block;
+}
+
+.create-form__cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8.5rem;
+  color: #9ca3af;
+  font-size: 0.875rem;
 }
 
 .create-form__tool-btn {

@@ -2,10 +2,12 @@
 import { getArticleDetail } from '~/api/article'
 import { listCategories } from '~/api/category'
 import { renderMarkdown, type MarkdownHeading } from '~/utils/markdown'
+import { resolveMediaUrl } from '~/utils/media'
 
 definePageMeta({ layout: 'home' })
 
 const route = useRoute()
+const config = useRuntimeConfig()
 
 const articleId = computed(() => {
   const id = Number(route.params.id)
@@ -38,6 +40,9 @@ const markdownResult = computed(() => {
 
 const renderedContent = computed(() => markdownResult.value.html)
 const tableOfContents = computed(() => markdownResult.value.headings)
+
+const coverUrl = computed(() => resolveMediaUrl(article.value?.cover, config.public.apiBase))
+const authorAvatarUrl = computed(() => resolveMediaUrl(article.value?.author_avatar, config.public.apiBase))
 
 const showBackTop = ref(false)
 const commentCount = ref(0)
@@ -125,8 +130,8 @@ function formatDate(dateStr: string) {
 
           <div v-if="article.author_name" class="article-page__author">
             <img
-              v-if="article.author_avatar"
-              :src="article.author_avatar"
+              v-if="authorAvatarUrl"
+              :src="authorAvatarUrl"
               :alt="article.author_name"
               class="article-page__author-avatar article-page__author-avatar--header"
             >
@@ -148,36 +153,26 @@ function formatDate(dateStr: string) {
           </p>
         </header>
 
-        <img
-          v-if="article.cover"
-          :src="article.cover"
-          :alt="article.title"
-          class="article-page__cover"
-        >
-
         <div class="article-page__content markdown-body" v-html="renderedContent" />
       </article>
 
       <aside class="article-page__sidebar">
         <div class="article-page__sidebar-card card">
-          <div class="article-page__author-card">
-            <img
-              v-if="article.author_avatar"
-              :src="article.author_avatar"
-              :alt="article.author_name"
-              class="article-page__author-avatar"
-            >
-            <div
-              v-else
-              class="article-page__author-avatar article-page__author-avatar--placeholder"
-              aria-hidden="true"
-            >
-              👤
-            </div>
+          <img
+            v-if="coverUrl"
+            :src="coverUrl"
+            :alt="`${article.title} 封面`"
+            class="article-page__sidebar-cover"
+          >
+          <div
+            v-else
+            class="article-page__sidebar-cover article-page__sidebar-cover--placeholder"
+          >
+            <span>暂无封面</span>
           </div>
         </div>
 
-        <div v-if="article.summary" class="article-page__sidebar-card card">
+        <div v-if="article.summary" class="article-page__sidebar-card article-page__sidebar-card--padded card">
           <h2 class="article-page__sidebar-title">
             摘要
           </h2>
@@ -188,7 +183,7 @@ function formatDate(dateStr: string) {
 
         <nav
           v-if="tableOfContents.length"
-          class="article-page__sidebar-card article-page__sidebar-card--toc card"
+          class="article-page__sidebar-card article-page__sidebar-card--padded article-page__sidebar-card--toc card"
           aria-label="文章目录"
         >
           <h2 class="article-page__sidebar-title">
@@ -381,13 +376,6 @@ function formatDate(dateStr: string) {
   color: #9ca3af;
 }
 
-.article-page__cover {
-  width: 100%;
-  margin-top: 1.75rem;
-  border-radius: 16px;
-  object-fit: cover;
-}
-
 .article-page__content {
   margin-top: 2rem;
   font-size: 1.0625rem;
@@ -533,9 +521,29 @@ function formatDate(dateStr: string) {
 }
 
 .article-page__sidebar-card {
-  padding: 1.25rem;
+  padding: 0;
   border-radius: 18px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.article-page__sidebar-card--padded {
+  padding: 1.25rem;
+}
+
+.article-page__sidebar-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.article-page__sidebar-cover--placeholder {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--home-accent-pale, #f0fdfa), rgb(255 255 255 / 80%));
+  color: #9ca3af;
+  font-size: 0.875rem;
 }
 
 .article-page__sidebar-card--toc {
@@ -552,9 +560,6 @@ function formatDate(dateStr: string) {
 }
 
 .article-page__author-avatar {
-  width: 5.5rem;
-  height: 5.5rem;
-  border-radius: 16px;
   object-fit: cover;
 }
 
@@ -564,14 +569,10 @@ function formatDate(dateStr: string) {
   border-radius: 999px;
 }
 
-.article-page__author-avatar--placeholder {
+.article-page__author-avatar--header.article-page__author-avatar--placeholder {
   display: grid;
   place-items: center;
   background: var(--home-accent-pale);
-  font-size: 2rem;
-}
-
-.article-page__author-avatar--header.article-page__author-avatar--placeholder {
   font-size: 0.95rem;
 }
 

@@ -7,6 +7,7 @@ import {
 } from '~/api/comment'
 import { batchGetCommentLikeStatus } from '~/api/interaction'
 import LikeButton from '~/components/LikeButton.vue'
+import { resolveMediaUrl } from '~/utils/media'
 
 const props = defineProps<{
   comment: CommentInfo
@@ -20,6 +21,11 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuth()
+const config = useRuntimeConfig()
+
+function avatarSrc(url: string) {
+  return resolveMediaUrl(url, config.public.apiBase)
+}
 
 const replies = ref<CommentInfo[]>([])
 const repliesPage = ref(0)
@@ -191,7 +197,7 @@ function isOwn(userId: number) {
     <div class="comment-item__main">
       <img
         v-if="comment.user_avatar"
-        :src="comment.user_avatar"
+        :src="avatarSrc(comment.user_avatar)"
         :alt="comment.user_name"
         class="comment-item__avatar"
       >
@@ -267,7 +273,7 @@ function isOwn(userId: number) {
           >
             <img
               v-if="reply.user_avatar"
-              :src="reply.user_avatar"
+              :src="avatarSrc(reply.user_avatar)"
               :alt="reply.user_name"
               class="comment-item__reply-avatar"
             >

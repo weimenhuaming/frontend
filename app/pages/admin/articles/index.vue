@@ -7,7 +7,7 @@ definePageMeta({
   middleware: 'admin',
 })
 
-useSeoMeta({ title: '文章列表 · Chenaqi Blog' })
+useSeoMeta({ title: '博客列表 · Chenaqi Blog' })
 
 const error = ref('')
 const actionId = ref<number | null>(null)
@@ -55,7 +55,7 @@ function formatDate(dateStr: string) {
     <header class="admin-view__header admin-view__header--row">
       <div>
         <h1 class="admin-view__title">
-          文章列表
+          博客列表
         </h1>
         <p class="admin-view__desc">
           查看已发布文章，可预览或删除。
@@ -72,29 +72,27 @@ function formatDate(dateStr: string) {
       </p>
 
       <ul v-if="articles.length" class="admin-list admin-list--articles">
-        <li
+        <AdminArticleListItem
           v-for="article in articles"
           :key="article.id"
-          class="admin-list__item admin-list__item--article"
+          :article="article"
+          :placeholder="categoryNameMap.get(article.category_id)"
         >
-          <div class="admin-list__article-main">
-            <NuxtLink :to="`/blog/${article.id}`" class="admin-list__article-title">
-              {{ article.title }}
-            </NuxtLink>
-            <p class="admin-list__article-meta">
-              <span>{{ categoryNameMap.get(article.category_id) || '未分类' }}</span>
-              <span>{{ formatDate(article.created_at) }}</span>
-            </p>
-          </div>
-          <button
-            type="button"
-            class="admin-panel__btn admin-panel__btn--danger"
-            :disabled="actionId === article.id"
-            @click="onDelete(article)"
-          >
-            {{ actionId === article.id ? '删除中...' : '删除' }}
-          </button>
-        </li>
+          <template #meta>
+            <span>{{ categoryNameMap.get(article.category_id) || '未分类' }}</span>
+            <span>{{ formatDate(article.created_at) }}</span>
+          </template>
+          <template #actions>
+            <button
+              type="button"
+              class="admin-panel__btn admin-panel__btn--danger"
+              :disabled="actionId === article.id"
+              @click="onDelete(article)"
+            >
+              {{ actionId === article.id ? '删除中...' : '删除' }}
+            </button>
+          </template>
+        </AdminArticleListItem>
       </ul>
       <p v-else class="admin-panel__empty">
         暂无文章，点击「新建文章」开始创作

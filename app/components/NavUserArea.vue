@@ -1,28 +1,14 @@
 <script setup lang="ts">
 const auth = useAuth()
 const router = useRouter()
+const { displayName, avatarUrl, roleLabel } = useUserAvatar()
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 
-const displayName = computed(() => auth.user.value?.name || '访客')
-const avatarUrl = computed(() => {
-  const avatar = auth.user.value?.avatar?.trim()
-  if (avatar)
-    return avatar
-  const name = encodeURIComponent(displayName.value.slice(0, 1) || 'U')
-  return `https://ui-avatars.com/api/?name=${name}&background=2563eb&color=fff&size=80`
-})
-
-const menuItems = computed(() => {
-  const items = [
-    { label: '个人中心', to: '/user', icon: '◉' },
-  ]
-  if (auth.isAdmin.value) {
-    items.push({ label: '管理后台', to: '/admin', icon: '⚙' })
-  }
-  return items
-})
+const menuItems = computed(() => [
+  { label: '个人中心', to: '/admin/profile', icon: '◉' },
+])
 
 function showMenu() {
   open.value = true
@@ -77,28 +63,24 @@ onUnmounted(() => {
         aria-haspopup="true"
         :aria-expanded="open"
       >
-        <img
+        <UserAvatar
           :src="avatarUrl"
-          :alt="displayName"
-          class="nav-user__avatar"
-          width="36"
-          height="36"
-        >
+          :name="displayName"
+          :size="36"
+        />
       </button>
 
       <Transition name="nav-user-menu">
         <div v-show="open" class="nav-user__menu" role="menu">
           <div class="nav-user__menu-head">
-            <img
+            <UserAvatar
               :src="avatarUrl"
-              :alt="displayName"
-              class="nav-user__menu-avatar"
-              width="40"
-              height="40"
-            >
+              :name="displayName"
+              :size="40"
+            />
             <div class="nav-user__menu-meta">
               <span class="nav-user__menu-name">{{ displayName }}</span>
-              <span class="nav-user__menu-role">{{ auth.user.value?.role }}</span>
+              <span class="nav-user__menu-role">{{ roleLabel }}</span>
             </div>
           </div>
 

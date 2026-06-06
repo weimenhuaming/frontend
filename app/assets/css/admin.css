@@ -135,7 +135,51 @@
 }
 
 .admin-list__item--article {
-  align-items: flex-start;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-list__thumb-wrap {
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.admin-list__thumb {
+  display: block;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.admin-list__thumb--placeholder {
+  display: grid;
+  place-items: center;
+  padding: 0.25rem;
+  background: var(--home-accent-pale, #f0fdfa);
+  color: var(--home-accent-dark, #0d9488);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.admin-list__actions {
+  flex-shrink: 0;
+}
+
+.admin-list__like-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.admin-list__like-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: #ef4444;
+  flex-shrink: 0;
 }
 
 .admin-list__name {
@@ -165,10 +209,17 @@
 .admin-list__article-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 0.85rem;
+  align-items: center;
+  gap: 0.35rem 0;
   margin: 0.25rem 0 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #9ca3af;
+}
+
+.admin-list__article-meta > span:not(:first-child)::before {
+  content: '·';
+  margin: 0 0.5rem;
+  color: #d1d5db;
 }
 
 @media (max-width: 640px) {

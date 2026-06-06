@@ -1,11 +1,11 @@
 <script setup lang="ts">
 const route = useRoute()
 const auth = useAuth()
+const { avatarUrl, displayName, roleLabel } = useUserAvatar()
 
 const navItems = [
   { label: '站内助手', to: '/agent', icon: 'ai' },
-  { label: '个人中心', to: '/user', icon: 'user' },
-  { label: '创作管理', to: '/admin', icon: 'admin' },
+  { label: '个人中心', to: '/admin/profile', icon: 'user' },
   { label: '文章专栏', to: '/blog', icon: 'article' },
   { label: '关于网站', to: '/about', icon: 'about' },
 ]
@@ -13,9 +13,9 @@ const navItems = [
 const isHome = computed(() => route.path === '/')
 const isCompact = computed(() => !isHome.value)
 
-const displayName = computed(() => auth.user.value?.name || '')
-
-const DEFAULT_AVATAR = '/images/moren.png'
+const sidebarName = computed(() =>
+  auth.isLoggedIn.value ? displayName.value : '登入',
+)
 
 const activeIndex = computed(() => {
   const index = navItems.findIndex(item => route.path.startsWith(item.to))
@@ -25,7 +25,7 @@ const activeIndex = computed(() => {
 const profileLink = computed(() => {
   if (isCompact.value)
     return '/'
-  return auth.isLoggedIn.value ? '/user' : '/auth/login'
+  return auth.isLoggedIn.value ? '/admin/profile' : '/auth/login'
 })
 
 const hoveredIndex = ref(activeIndex.value)
@@ -67,6 +67,7 @@ function onScroll() {
 
 onMounted(() => {
   auth.hydrate()
+  void auth.syncProfile()
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
@@ -92,13 +93,12 @@ onUnmounted(() => {
         class="home-nav__profile"
         :class="{ 'home-nav__profile--compact': isCompact }"
       >
-        <img
-          :src="DEFAULT_AVATAR"
-          :alt="auth.isLoggedIn.value ? displayName : '登入'"
+        <UserAvatar
+          :src="auth.isLoggedIn.value ? avatarUrl : ''"
+          :name="sidebarName"
+          :size="38"
           class="home-nav__avatar"
-          width="44"
-          height="44"
-        >
+        />
         <template v-if="!isCompact">
           <div v-if="!auth.isLoggedIn.value" class="home-nav__profile-text">
             <p class="home-nav__name">
@@ -110,9 +110,8 @@ onUnmounted(() => {
           <div v-else class="home-nav__profile-text">
             <p class="home-nav__name">
               {{ displayName }}
-              <span class="home-nav__badge">(开发中)</span>
             </p>
-            <p class="home-nav__tag">{{ auth.user.value?.role || 'user' }}</p>
+            <p class="home-nav__tag">{{ roleLabel }}</p>
           </div>
         </template>
       </NuxtLink>
@@ -273,12 +272,7 @@ onUnmounted(() => {
   transform: translateY(-1px);
 }
 
-.home-nav__avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
+.home-nav__avatar :deep(.user-avatar) {
   border: 2px solid #fff;
   box-shadow: 0 2px 8px rgb(20 184 166 / 22%);
 }

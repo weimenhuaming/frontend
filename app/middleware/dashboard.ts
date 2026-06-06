@@ -1,4 +1,6 @@
-/** 仅 admin 可访问：definePageMeta({ middleware: 'admin' }) */
+import type { AuthUser, LoginData } from '~/api/auth'
+
+/** 后台管理区：所有登录用户可访问（个人中心、点赞列表等） */
 export default defineNuxtRouteMiddleware((to) => {
   const auth = useAuth()
 
@@ -11,9 +13,5 @@ export default defineNuxtRouteMiddleware((to) => {
       path: '/auth/login',
       query: { redirect: to.fullPath },
     })
-  }
-
-  if (!auth.isAdmin.value) {
-    return navigateTo('/admin/profile')
   }
 })

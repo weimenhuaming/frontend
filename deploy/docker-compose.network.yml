@@ -1,0 +1,21 @@
+# 联调后端容器：需先 cd backend/deploy && docker compose up -d
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        NUXT_API_PROXY_TARGET: http://gateway:9000
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: 3000
+    networks:
+      - chenaqi-net
+    restart: unless-stopped
+
+networks:
+  chenaqi-net:
+    external: true

@@ -12,6 +12,8 @@ export function useAuth() {
     isLoggedIn,
     isAdmin,
     hydrate: () => store.hydrate(),
+    syncProfile: () => store.syncProfile(),
+    updateUser: (data: Partial<import('~/api/auth').AuthUser>) => store.updateUser(data),
     logout: () => store.logout(),
     authHeaders: () => store.authHeaders(),
   }

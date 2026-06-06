@@ -2,15 +2,25 @@
 const route = useRoute()
 const auth = useAuth()
 
-const navItems = [
-  { label: '分类管理', to: '/admin' },
-  { label: '文章列表', to: '/admin/articles' },
-  { label: '新建文章', to: '/admin/article/create' },
+const commonNavItems = [
+  { label: '个人中心', to: '/admin/profile' },
+  { label: '点赞列表', to: '/admin/likes' },
 ]
 
+const adminNavItems = [
+  { label: '分类管理', to: '/admin/categories' },
+  { label: '博客列表', to: '/admin/articles' },
+  { label: '新建文章', to: '/admin/article/create' },
+  { label: '我的博客', to: '/admin/my-articles' },
+]
+
+const navItems = computed(() =>
+  auth.isAdmin.value
+    ? [...commonNavItems, ...adminNavItems]
+    : commonNavItems,
+)
+
 function isActive(path: string) {
-  if (path === '/admin')
-    return route.path === '/admin'
   return route.path === path || route.path.startsWith(`${path}/`)
 }
 
@@ -26,52 +36,36 @@ onMounted(() => auth.hydrate())
         </div>
 
         <main class="home-shell__main admin-shell">
-          <template v-if="auth.isAdmin.value">
-            <aside class="admin-shell__sidebar card">
-              <div class="admin-shell__brand">
-                <h2 class="admin-shell__brand-title">
-                  创作管理
-                </h2>
-                <p class="admin-shell__brand-desc">
-                  博客后台
-                </p>
-              </div>
-
-              <nav class="admin-shell__nav" aria-label="管理菜单">
-                <NuxtLink
-                  v-for="item in navItems"
-                  :key="item.to"
-                  :to="item.to"
-                  class="admin-shell__nav-link"
-                  :class="{ 'admin-shell__nav-link--active': isActive(item.to) }"
-                >
-                  {{ item.label }}
-                </NuxtLink>
-              </nav>
-
-              <NuxtLink to="/blog" class="admin-shell__back">
-                ← 返回博客
-              </NuxtLink>
-            </aside>
-
-            <section class="admin-shell__content">
-              <slot />
-            </section>
-          </template>
-
-          <div v-else class="admin-denied">
-            <div class="admin-denied__panel card">
-              <p class="admin-denied__icon" aria-hidden="true">
-                🔒
-              </p>
-              <h1 class="admin-denied__title">
-                暂无访问权限
-              </h1>
-              <p class="admin-denied__text">
-                抱歉，「创作管理」目前仅对管理员账号开放。
+          <aside class="admin-shell__sidebar card">
+            <div class="admin-shell__brand">
+              <h2 class="admin-shell__brand-title">
+                后台管理
+              </h2>
+              <p class="admin-shell__brand-desc">
+                个人中心与内容管理
               </p>
             </div>
-          </div>
+
+            <nav class="admin-shell__nav" aria-label="后台菜单">
+              <NuxtLink
+                v-for="item in navItems"
+                :key="item.to"
+                :to="item.to"
+                class="admin-shell__nav-link"
+                :class="{ 'admin-shell__nav-link--active': isActive(item.to) }"
+              >
+                {{ item.label }}
+              </NuxtLink>
+            </nav>
+
+            <NuxtLink to="/blog" class="admin-shell__back">
+              ← 返回博客
+            </NuxtLink>
+          </aside>
+
+          <section class="admin-shell__content">
+            <slot />
+          </section>
         </main>
       </div>
     </div>
@@ -170,41 +164,6 @@ onMounted(() => auth.hydrate())
 
 .admin-shell__content {
   min-width: 0;
-}
-
-.admin-denied {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 14rem);
-  padding: 2rem 0;
-}
-
-.admin-denied__panel {
-  width: min(100%, 32rem);
-  padding: 3rem 2.5rem;
-  text-align: center;
-}
-
-.admin-denied__icon {
-  margin: 0 0 1rem;
-  font-size: 2.5rem;
-  line-height: 1;
-}
-
-.admin-denied__title {
-  margin: 0 0 1rem;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #1a1a1a;
-}
-
-.admin-denied__text {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.8;
-  color: #374151;
 }
 
 @media (max-width: 960px) {

@@ -1,4 +1,4 @@
-import { request } from './http'
+import { postLogin, request } from './http'
 
 /** 邮箱登录请求 */
 export interface EmailLoginRequest {
@@ -79,12 +79,9 @@ export function sendVerificationCode(email: string): Promise<void> {
  * 邮箱验证码登录
  */
 export function emailLogin(params: EmailLoginRequest): Promise<LoginData> {
-  return request<LoginData>('/emaillogin', {
-    method: 'POST',
-    body: {
-      email: params.email,
-      captcha: params.captcha,
-    },
+  return postLogin('/emaillogin', {
+    email: params.email,
+    captcha: params.captcha,
   })
 }
 
@@ -100,14 +97,11 @@ export function logout(): Promise<void> {
  * 账号密码登录
  */
 export function usernameLogin(params: UsernameLoginRequest): Promise<LoginData> {
-  return request<LoginData>('/login', {
-    method: 'POST',
-    body: {
-      name: params.username,
-      password: params.password,
-      code: params.verificationCode,
-      captcha_id: params.captcha_id,
-    },
+  return postLogin('/login', {
+    name: params.username,
+    password: params.password,
+    code: params.verificationCode,
+    captcha_id: params.captcha_id,
   })
 }
 
@@ -140,10 +134,10 @@ export function resetPassword(req: ResetPasswordRequest): Promise<void> {
   return request<void>('/reset_password_by_email', {
     method: 'POST',
     body: {
-      password: req.password,
       email: req.email,
       captcha: req.captcha,
-      confirm: req.confirm,
+      newpassword: req.password,
+      confirmpassword: req.confirm,
     },
   })
 }

@@ -15,6 +15,7 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuth()
+const { avatarUrl, displayName } = useUserAvatar()
 
 const COMMENT_PAGE_SIZE = 5
 
@@ -175,19 +176,12 @@ watch(() => props.articleId, () => fetchComments(true))
     <!-- 发表评论 -->
     <div class="comment-section__composer">
       <template v-if="auth.isLoggedIn.value">
-        <img
-          v-if="auth.user.value?.avatar"
-          :src="auth.user.value.avatar"
-          :alt="auth.user.value.name"
+        <UserAvatar
+          :src="avatarUrl"
+          :name="displayName"
+          :size="36"
           class="comment-section__avatar"
-        >
-        <div
-          v-else
-          class="comment-section__avatar comment-section__avatar--placeholder"
-          aria-hidden="true"
-        >
-          {{ auth.user.value?.name?.charAt(0) || '?' }}
-        </div>
+        />
         <div class="comment-section__input-wrap">
           <textarea
             v-model="content"
