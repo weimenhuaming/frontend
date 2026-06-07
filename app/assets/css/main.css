@@ -50,10 +50,20 @@ img {
   height: auto;
 }
 
-code {
+/* 行内代码 */
+:not(pre) > code {
   font-family: var(--font-mono);
   font-size: 0.9em;
   background: #f3f4f6;
   padding: 0.15em 0.4em;
   border-radius: 4px;
+}
+
+/* 代码块内的 code 不继承行内样式，避免深色 pre 上出现浅色行背景 */
+pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: inherit;
+  color: inherit;
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { getArticleDetail } from '~/api/article'
 import { listCategories } from '~/api/category'
+import { viewArticle } from '~/api/interaction'
 import { renderMarkdown, type MarkdownHeading } from '~/utils/markdown'
 import { resolveMediaUrl } from '~/utils/media'
 
@@ -14,7 +15,7 @@ const articleId = computed(() => {
   return Number.isFinite(id) && id > 0 ? id : null
 })
 
-const { data: article, pending, error } = await useAsyncData(
+const { data: article, pending, error, refresh } = await useAsyncData(
   () => `article-${articleId.value}`,
   () => {
     if (!articleId.value)
@@ -83,9 +84,38 @@ function scrollToHeading(id: string) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+/** 防止开发模式 Strict Mode 重复挂载导致重复计浏览 */
+const viewedPaths = useState<string[]>('article-viewed-paths', () => [])
+
+async function recordArticleView() {
+  const id = articleId.value
+  const path = route.fullPath
+  if (!id || viewedPaths.value.includes(path))
+    return
+
+  viewedPaths.value = [...viewedPaths.value, path]
+
+  try {
+    await viewArticle(id)
+    await refresh()
+    await refreshNuxtData('blog-articles')
+  }
+  catch {
+    viewedPaths.value = viewedPaths.value.filter(item => item !== path)
+  }
+}
+
 onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
+
+  if (import.meta.client)
+    void recordArticleView()
+})
+
+onBeforeRouteLeave(() => {
+  const path = route.fullPath
+  viewedPaths.value = viewedPaths.value.filter(item => item !== path)
 })
 
 onUnmounted(() => {

@@ -12,6 +12,7 @@ const adminNavItems = [
   { label: '博客列表', to: '/admin/articles' },
   { label: '新建文章', to: '/admin/article/create' },
   { label: '我的博客', to: '/admin/my-articles' },
+  { label: '知识库管理', to: '/admin/knowledge' },
 ]
 
 const navItems = computed(() =>

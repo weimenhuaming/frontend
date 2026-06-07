@@ -222,8 +222,245 @@
   color: #d1d5db;
 }
 
+/* ── Shared admin buttons ── */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.admin-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-btn--primary {
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(20 184 166 / 28%);
+}
+
+.admin-btn--primary:hover {
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+}
+
+.admin-btn--ghost {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.admin-btn--ghost:hover {
+  background: #e5e7eb;
+}
+
+.admin-btn--danger-ghost {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.admin-btn--danger-ghost:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+/* ── Article list pages ── */
+.articles-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.articles-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.articles-header__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.articles-header__icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+  color: #0d9488;
+}
+
+.articles-header__icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.articles-header__title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.articles-header__desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #6b7280;
+}
+
+.articles-stats {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.articles-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 4rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 65%);
+  border: 1px solid rgb(255 255 255 / 90%);
+  box-shadow: 0 2px 12px rgb(20 184 166 / 8%);
+}
+
+.articles-stat__value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0d9488;
+  line-height: 1.2;
+}
+
+.articles-stat__label {
+  margin-top: 0.1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.03em;
+}
+
+.articles-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.articles-alert svg {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.articles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.articles-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.articles-empty__icon {
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.articles-empty__icon svg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.articles-empty__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.articles-empty__desc {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+
+.articles-empty__spinner {
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0.75rem;
+  border: 2.5px solid #e5e7eb;
+  border-top-color: #14b8a6;
+  border-radius: 50%;
+  animation: articles-spin 0.7s linear infinite;
+}
+
+@keyframes articles-spin {
+  to { transform: rotate(360deg); }
+}
+
+.articles-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgb(0 0 0 / 6%);
+}
+
+.articles-pager__info {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 4rem;
+  text-align: center;
+}
+
 @media (max-width: 640px) {
   .admin-view__header--row {
     flex-direction: column;
+  }
+
+  .articles-header {
+    flex-direction: column;
+  }
+
+  .articles-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .articles-stat {
+    flex: 1;
+    min-width: 0;
   }
 }

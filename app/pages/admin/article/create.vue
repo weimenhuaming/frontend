@@ -56,6 +56,11 @@ watch(content, (value) => {
 
 const renderedPreview = computed(() => renderMarkdown(previewContent.value).html)
 
+const wordCount = computed(() => {
+  const text = content.value.trim()
+  return text ? text.length : 0
+})
+
 onUnmounted(() => {
   if (previewTimer)
     clearTimeout(previewTimer)
@@ -201,460 +206,543 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="admin-view">
-    <header class="admin-view__header">
-      <h1 class="admin-view__title">
-        新建文章
-      </h1>
-      <p class="admin-view__desc">
-        正文支持 Markdown，也可导入本地 .md 文件。
-      </p>
+  <div class="write-page">
+    <!-- 顶栏 -->
+    <header class="write-topbar card">
+      <NuxtLink to="/admin/articles" class="write-topbar__back">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" aria-hidden="true">
+          <path fill-rule="evenodd" d="M11.78 4.22a.75.75 0 0 1 0 1.06L8.06 9h7.19a.75.75 0 0 1 0 1.5H8.06l3.72 3.72a.75.75 0 1 1-1.06 1.06l-5-5a.75.75 0 0 1 0-1.06l5-5a.75.75 0 0 1 1.06 0z" clip-rule="evenodd" />
+        </svg>
+        返回
+      </NuxtLink>
+      <span class="write-topbar__title">新建文章</span>
+      <div class="write-topbar__actions">
+        <button type="button" class="admin-btn admin-btn--ghost" @click="onImportClick">
+          导入 .md
+        </button>
+        <button type="submit" form="article-form" class="admin-btn admin-btn--primary" :disabled="submitting">
+          {{ submitting ? '发布中…' : '发布' }}
+        </button>
+      </div>
     </header>
 
-    <form class="create-form card" @submit.prevent="onSubmit">
-      <div class="create-form__grid">
-        <label class="create-form__field create-form__field--full">
-          <span class="create-form__label">标题</span>
-          <input v-model="title" type="text" class="create-form__input" placeholder="文章标题" maxlength="120">
-        </label>
+    <Transition name="write-toast">
+      <div v-if="error" class="write-alert write-alert--error" role="alert">{{ error }}</div>
+    </Transition>
+    <Transition name="write-toast">
+      <div v-if="success" class="write-alert write-alert--success" role="status">{{ success }}</div>
+    </Transition>
 
-        <label class="create-form__field create-form__field--full">
-          <span class="create-form__label">摘要</span>
-          <textarea
-            v-model="summary"
-            class="create-form__textarea create-form__textarea--short"
-            placeholder="用于列表展示的简短摘要"
-            rows="3"
-            maxlength="300"
-          />
-        </label>
+    <form id="article-form" class="write-layout" @submit.prevent="onSubmit">
+      <!-- 左侧：写作区 -->
+      <main class="write-main card">
+        <input
+          v-model="title"
+          type="text"
+          class="write-title"
+          placeholder="文章标题"
+          maxlength="120"
+        >
+        <textarea
+          v-model="summary"
+          class="write-summary"
+          placeholder="写一段摘要，会显示在列表页…"
+          rows="2"
+          maxlength="300"
+        />
 
-        <div class="create-form__field">
-          <span class="create-form__label">分类</span>
-          <AdminSelect
-            v-model="categoryId"
-            placeholder="请选择分类"
-            :options="categoryOptions"
-          />
-        </div>
-
-        <div class="create-form__field">
-          <span class="create-form__label">封面（可选）</span>
-          <div class="create-form__cover">
+        <div class="write-editor-bar">
+          <div class="write-mode" role="group" aria-label="编辑器模式">
             <button
               type="button"
-              class="create-form__cover-btn"
-              :disabled="uploadingCover"
-              @click="onCoverClick"
-            >
-              <img
-                v-if="coverPreviewUrl"
-                :src="coverPreviewUrl"
-                alt="文章封面预览"
-                class="create-form__cover-preview"
-              >
-              <span v-else class="create-form__cover-placeholder">
-                {{ uploadingCover ? '上传中…' : '点击上传封面' }}
-              </span>
-            </button>
-            <input
-              ref="coverInputRef"
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              class="create-form__file-input"
-              @change="onCoverChange"
-            >
-          </div>
-        </div>
-      </div>
-
-      <div class="create-form__editor">
-        <div class="create-form__editor-head">
-          <span class="create-form__label">Markdown 正文</span>
-          <div class="create-form__editor-actions">
-            <input
-              ref="fileInputRef"
-              type="file"
-              accept=".md,text/markdown,text/plain"
-              class="create-form__file-input"
-              @change="onFileChange"
-            >
-            <button type="button" class="create-form__tool-btn" @click="onImportClick">
-              导入 .md
-            </button>
-            <button
-              type="button"
-              class="create-form__tool-btn"
-              :class="{ 'create-form__tool-btn--active': editorMode === 'edit' }"
+              class="write-mode__btn"
+              :class="{ 'write-mode__btn--on': editorMode === 'edit' }"
               @click="editorMode = 'edit'"
             >
               编辑
             </button>
             <button
               type="button"
-              class="create-form__tool-btn"
-              :class="{ 'create-form__tool-btn--active': editorMode === 'split' }"
+              class="write-mode__btn"
+              :class="{ 'write-mode__btn--on': editorMode === 'split' }"
               @click="editorMode = 'split'"
             >
               分屏
             </button>
             <button
               type="button"
-              class="create-form__tool-btn"
-              :class="{ 'create-form__tool-btn--active': editorMode === 'preview' }"
+              class="write-mode__btn"
+              :class="{ 'write-mode__btn--on': editorMode === 'preview' }"
               @click="editorMode = 'preview'"
             >
               预览
             </button>
           </div>
+          <span v-if="wordCount > 0" class="write-wordcount">{{ wordCount }} 字</span>
         </div>
 
-        <div
-          class="create-form__editor-body"
-          :class="`create-form__editor-body--${editorMode}`"
-        >
-          <div v-if="editorMode !== 'preview'" class="create-form__editor-pane create-form__editor-pane--edit">
-            <span v-if="editorMode === 'split'" class="create-form__pane-label">编辑</span>
+        <div class="write-workspace" :class="`write-workspace--${editorMode}`">
+          <div v-if="editorMode !== 'preview'" class="write-pane">
             <textarea
               v-model="content"
-              class="create-form__textarea create-form__textarea--content"
-              placeholder="# 标题&#10;&#10;在这里编写 Markdown 正文..."
+              class="write-content"
+              placeholder="在这里编写 Markdown 正文…"
               spellcheck="false"
             />
           </div>
-
-          <div v-if="editorMode !== 'edit'" class="create-form__editor-pane create-form__editor-pane--preview">
-            <span v-if="editorMode === 'split'" class="create-form__pane-label">预览</span>
-            <div
-              class="create-form__preview markdown-body"
-              v-html="renderedPreview"
-            />
+          <div v-if="editorMode !== 'edit'" class="write-pane">
+            <div class="write-preview markdown-body" v-html="renderedPreview" />
           </div>
         </div>
-      </div>
+      </main>
 
-      <p v-if="error" class="create-form__message create-form__message--error">
-        {{ error }}
-      </p>
-      <p v-if="success" class="create-form__message create-form__message--success">
-        {{ success }}
-      </p>
+      <!-- 右侧：发布设置 -->
+      <aside class="write-aside">
+        <section class="write-panel card">
+          <h3 class="write-panel__title">发布设置</h3>
 
-      <div class="create-form__footer">
-        <NuxtLink to="/admin/articles" class="create-form__cancel">
-          取消
-        </NuxtLink>
-        <button type="submit" class="create-form__submit" :disabled="submitting">
-          {{ submitting ? '发布中...' : '发布文章' }}
-        </button>
-      </div>
+          <div class="write-panel__field">
+            <span class="write-panel__label">分类</span>
+            <AdminSelect
+              v-model="categoryId"
+              placeholder="选择分类"
+              :options="categoryOptions"
+            />
+          </div>
+
+          <div class="write-panel__field">
+            <span class="write-panel__label">封面 <em>可选</em></span>
+            <button
+              type="button"
+              class="write-cover"
+              :class="{ 'write-cover--filled': coverPreviewUrl }"
+              :disabled="uploadingCover"
+              @click="onCoverClick"
+            >
+              <img v-if="coverPreviewUrl" :src="coverPreviewUrl" alt="封面" class="write-cover__img">
+              <span v-else class="write-cover__placeholder">
+                {{ uploadingCover ? '上传中…' : '+ 上传封面' }}
+              </span>
+            </button>
+          </div>
+
+          <div class="write-panel__meta">
+            <span>摘要 {{ summary.length }}/300</span>
+          </div>
+        </section>
+      </aside>
+
+      <input
+        ref="fileInputRef"
+        type="file"
+        accept=".md,text/markdown,text/plain"
+        class="write-hidden"
+        @change="onFileChange"
+      >
+      <input
+        ref="coverInputRef"
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        class="write-hidden"
+        @change="onCoverChange"
+      >
     </form>
   </div>
 </template>
 
 <style scoped>
-.card {
-  background: rgb(255 255 255 / 70%);
-  backdrop-filter: blur(14px);
-  border-radius: 22px;
-  border: 1px solid rgb(255 255 255 / 80%);
-  box-shadow: 0 6px 24px var(--home-shadow);
-}
-
-.create-form {
-  padding: 1.5rem 1.65rem;
-}
-
-.create-form__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.create-form__field {
+.write-page {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.75rem;
+  max-width: 72rem;
+  margin: 0 auto;
 }
 
-.create-form__field--full {
-  grid-column: 1 / -1;
+/* ── 顶栏 ── */
+.write-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
 }
 
-.create-form__label {
+.write-topbar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #6b7280;
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.write-topbar__back:hover {
+  color: #0d9488;
+}
+
+.write-topbar__title {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 700;
   color: #374151;
 }
 
-.create-form__input,
-.create-form__textarea {
+.write-topbar__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ── 提示 ── */
+.write-alert {
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.write-alert--error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.write-alert--success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.write-toast-enter-active,
+.write-toast-leave-active {
+  transition: opacity 0.2s;
+}
+
+.write-toast-enter-from,
+.write-toast-leave-to {
+  opacity: 0;
+}
+
+/* ── 主布局：左写右设 ── */
+.write-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17rem;
+  gap: 1rem;
+  align-items: start;
+}
+
+.write-hidden {
+  display: none;
+}
+
+/* ── 左侧写作区 ── */
+.write-main {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 12rem);
+  padding: 1.5rem 1.75rem 1.25rem;
+}
+
+.write-title {
   width: 100%;
-  padding: 0.7rem 0.9rem;
+  padding: 0.75rem 1rem;
   border: 1px solid rgb(0 0 0 / 8%);
   border-radius: 12px;
-  background: rgb(255 255 255 / 80%);
-  font: inherit;
-  font-size: 0.875rem;
+  background: rgb(255 255 255 / 85%);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.create-form__input:focus,
-.create-form__textarea:focus {
-  border-color: var(--home-accent);
-  box-shadow: 0 0 0 3px rgb(20 184 166 / 15%);
+.write-title:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 14%);
 }
 
-.create-form__textarea {
-  resize: vertical;
-  line-height: 1.6;
-}
-
-.create-form__textarea--short {
-  min-height: 5.5rem;
-}
-
-.create-form__editor {
-  margin-top: 1.25rem;
-}
-
-.create-form__editor-body {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.create-form__editor-body--edit {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.create-form__editor-body--preview {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.create-form__editor-body--split {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-
-.create-form__editor-pane {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  min-width: 0;
-}
-
-.create-form__pane-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+.write-title::placeholder {
   color: #9ca3af;
+  font-weight: 500;
 }
 
-.create-form__editor-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.create-form__editor-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.create-form__file-input {
-  display: none;
-}
-
-.create-form__cover {
-  display: flex;
-}
-
-.create-form__cover-btn {
+.write-summary {
   width: 100%;
-  min-height: 8.5rem;
-  padding: 0;
-  border: 1px dashed rgb(0 0 0 / 12%);
+  margin-top: 0.75rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgb(0 0 0 / 8%);
   border-radius: 12px;
-  background: rgb(255 255 255 / 80%);
-  overflow: hidden;
-  cursor: pointer;
+  background: rgb(255 255 255 / 85%);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #4b5563;
+  resize: vertical;
+  outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.create-form__cover-btn:hover:not(:disabled) {
-  border-color: var(--home-accent);
-  box-shadow: 0 0 0 3px rgb(20 184 166 / 15%);
+.write-summary:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 14%);
 }
 
-.create-form__cover-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+.write-summary::placeholder {
+  color: #9ca3af;
 }
 
-.create-form__cover-preview {
-  width: 100%;
-  height: 8.5rem;
-  object-fit: cover;
-  display: block;
-}
-
-.create-form__cover-placeholder {
+.write-editor-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 8.5rem;
-  color: #9ca3af;
-  font-size: 0.875rem;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgb(0 0 0 / 6%);
 }
 
-.create-form__tool-btn {
-  padding: 0.45rem 0.85rem;
-  border: 1px solid rgb(0 0 0 / 8%);
-  border-radius: 999px;
-  background: rgb(255 255 255 / 80%);
-  color: #4b5563;
-  font-size: 0.8125rem;
+.write-mode {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.write-mode__btn {
+  padding: 0.35rem 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: color 0.15s, background 0.15s;
 }
 
-.create-form__tool-btn:hover,
-.create-form__tool-btn--active {
-  border-color: var(--home-accent);
-  color: var(--home-accent-dark);
-  background: var(--home-accent-pale);
+.write-mode__btn:hover {
+  color: #4b5563;
 }
 
-.create-form__textarea--content {
+.write-mode__btn--on {
+  background: #f0fdfa;
+  color: #0d9488;
+}
+
+.write-wordcount {
+  font-size: 0.6875rem;
+  color: #9ca3af;
+}
+
+.write-workspace {
+  display: grid;
+  flex: 1;
+  gap: 0;
+  margin-top: 0.75rem;
+  min-height: 0;
+}
+
+.write-workspace--edit,
+.write-workspace--preview {
+  grid-template-columns: 1fr;
+}
+
+.write-workspace--split {
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: rgb(0 0 0 / 6%);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.write-pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.write-workspace--split .write-pane {
+  background: rgb(255 255 255 / 90%);
+}
+
+.write-content {
+  flex: 1;
   width: 100%;
-  min-height: 22rem;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  line-height: 1.7;
-  resize: vertical;
-}
-
-.create-form__editor-body--split .create-form__textarea--content {
-  min-height: 24rem;
+  min-height: 28rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: #1f2937;
   resize: none;
+  outline: none;
 }
 
-.create-form__preview {
-  width: 100%;
-  min-height: 22rem;
+.write-workspace--split .write-content {
+  padding: 1rem;
+  min-height: 28rem;
+}
+
+.write-preview {
+  flex: 1;
+  min-height: 28rem;
   overflow-y: auto;
-  padding: 1rem 1.1rem;
-  border: 1px solid rgb(0 0 0 / 8%);
-  border-radius: 12px;
-  background: rgb(255 255 255 / 80%);
   font-size: 0.9375rem;
   line-height: 1.8;
   color: #374151;
 }
 
-.create-form__editor-body--split .create-form__preview {
-  min-height: 24rem;
-  max-height: none;
+.write-workspace--split .write-preview {
+  padding: 1rem;
 }
 
-.create-form__preview :deep(h1),
-.create-form__preview :deep(h2),
-.create-form__preview :deep(h3) {
-  margin: 1.25rem 0 0.65rem;
-  color: #1a1a1a;
+.write-preview :deep(h1),
+.write-preview :deep(h2),
+.write-preview :deep(h3) {
+  margin: 1rem 0 0.5rem;
+  color: #111827;
 }
 
-.create-form__preview :deep(p) {
-  margin: 0 0 0.85rem;
+.write-preview :deep(p) {
+  margin: 0 0 0.75rem;
 }
 
-.create-form__preview :deep(pre) {
-  margin: 0.85rem 0;
+.write-preview :deep(pre) {
+  margin: 0.75rem 0;
   padding: 0.85rem;
   overflow-x: auto;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #1e293b;
   color: #e2e8f0;
   font-size: 0.8125rem;
 }
 
-.create-form__preview :deep(:not(pre) > code) {
-  padding: 0.15em 0.35em;
+.write-preview :deep(pre code) {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+.write-preview :deep(:not(pre) > code) {
+  padding: 0.12em 0.3em;
   border-radius: 4px;
   background: #f3f4f6;
-  font-family: var(--font-mono);
+  font-family: ui-monospace, monospace;
 }
 
-.create-form__message {
-  margin: 1rem 0 0;
+/* ── 右侧设置栏 ── */
+.write-aside {
+  position: sticky;
+  top: 5.5rem;
+}
+
+.write-panel {
+  padding: 1.15rem 1.2rem;
+}
+
+.write-panel__title {
+  margin: 0 0 1rem;
   font-size: 0.8125rem;
-}
-
-.create-form__message--error {
-  color: #dc2626;
-}
-
-.create-form__message--success {
-  color: var(--home-accent-dark);
-}
-
-.create-form__footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgb(0 0 0 / 6%);
-}
-
-.create-form__cancel {
-  padding: 0.65rem 1rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-  text-decoration: none;
-}
-
-.create-form__cancel:hover {
+  font-weight: 700;
   color: #374151;
 }
 
-.create-form__submit {
-  padding: 0.65rem 1.25rem;
-  border: none;
-  border-radius: 999px;
-  background: var(--home-accent);
-  color: #fff;
-  font-size: 0.875rem;
+.write-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.write-panel__label {
+  font-size: 0.6875rem;
   font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.write-panel__label em {
+  font-style: normal;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #d1d5db;
+}
+
+.write-cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1.5px dashed #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+  overflow: hidden;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.create-form__submit:hover:not(:disabled) {
-  background: var(--home-accent-dark);
+.write-cover:hover:not(:disabled) {
+  border-color: #14b8a6;
+  background: #f0fdfa;
 }
 
-.create-form__submit:disabled {
-  opacity: 0.65;
+.write-cover--filled {
+  border-style: solid;
+  border-color: rgb(0 0 0 / 8%);
+}
+
+.write-cover:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-@media (max-width: 720px) {
-  .create-form__grid {
+.write-cover__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.write-cover__placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #9ca3af;
+  font-size: 0.8125rem;
+}
+
+.write-panel__meta {
+  padding-top: 0.75rem;
+  border-top: 1px solid rgb(0 0 0 / 6%);
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+@media (max-width: 900px) {
+  .write-layout {
     grid-template-columns: 1fr;
   }
 
-  .create-form__editor-body--split {
+  .write-aside {
+    position: static;
+  }
+
+  .write-main {
+    min-height: auto;
+  }
+
+  .write-workspace--split {
     grid-template-columns: 1fr;
   }
 
-  .create-form__editor-body--split .create-form__textarea--content,
-  .create-form__editor-body--split .create-form__preview {
-    min-height: 18rem;
+  .write-content,
+  .write-preview {
+    min-height: 16rem;
   }
 }
 </style>
