@@ -13,6 +13,14 @@ const loading = ref(false)
 const error = ref('')
 const success = ref('')
 const actionId = ref<number | null>(null)
+const deleteTarget = ref<CategoryInfo | null>(null)
+const deleteDialogOpen = computed({
+  get: () => deleteTarget.value !== null,
+  set: (open: boolean) => {
+    if (!open)
+      deleteTarget.value = null
+  },
+})
 
 const { data: categoriesData, pending, refresh } = await useAsyncData(
   'admin-categories',
@@ -49,8 +57,13 @@ async function onCreate() {
   }
 }
 
-async function onDelete(category: CategoryInfo) {
-  if (!confirm(`确定删除分类「${category.name}」吗？`))
+function onDelete(category: CategoryInfo) {
+  deleteTarget.value = category
+}
+
+async function confirmDelete() {
+  const category = deleteTarget.value
+  if (!category)
     return
 
   clearMessages()
@@ -58,6 +71,7 @@ async function onDelete(category: CategoryInfo) {
   try {
     await deleteCategory(category.id)
     success.value = `已删除「${category.name}」`
+    deleteTarget.value = null
     await refresh()
   }
   catch (e: unknown) {
@@ -198,6 +212,16 @@ function categoryHue(name: string) {
         </article>
       </div>
     </section>
+
+    <ConfirmDialog
+      v-model="deleteDialogOpen"
+      title="删除分类"
+      :message="deleteTarget ? `确定删除分类「${deleteTarget.name}」吗？` : ''"
+      confirm-text="删除"
+      danger
+      :loading="!!deleteTarget && actionId === deleteTarget.id"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 

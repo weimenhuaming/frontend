@@ -29,6 +29,7 @@ const renderedHtml = computed(() => {
       <div
         v-if="message.role === 'assistant'"
         class="agent-message__content markdown-body"
+        :class="{ 'agent-message__content--streaming': message.streaming }"
         v-html="renderedHtml"
       />
       <p v-else class="agent-message__content agent-message__content--plain">
@@ -138,5 +139,27 @@ const renderedHtml = computed(() => {
   border-radius: 4px;
   background: #f3f4f6;
   color: #be185d;
+}
+
+.agent-message__content--streaming::after {
+  content: '';
+  display: inline-block;
+  width: 0.4rem;
+  height: 1em;
+  margin-left: 0.15rem;
+  vertical-align: text-bottom;
+  background: var(--home-accent-dark, #6366f1);
+  border-radius: 1px;
+  animation: agent-cursor-blink 1s step-end infinite;
+}
+
+@keyframes agent-cursor-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 </style>

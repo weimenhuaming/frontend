@@ -1,10 +1,11 @@
-import { createAgentSession, sendAgentChat } from '~/api/agent'
+import { createAgentSession, sendAgentChatStream } from '~/api/agent'
 
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
   timestamp: number
+  streaming?: boolean
 }
 
 export interface ChatSession {
@@ -118,7 +119,11 @@ export function useAgentChat() {
     persist()
   }
 
-  function updateSessionMessages(sessionId: string, updater: (messages: ChatMessage[]) => ChatMessage[]) {
+  function updateSessionMessages(
+    sessionId: string,
+    updater: (messages: ChatMessage[]) => ChatMessage[],
+    options?: { persist?: boolean },
+  ) {
     const index = sessions.value.findIndex(session => session.id === sessionId)
     if (index < 0)
       return
@@ -131,13 +136,20 @@ export function useAgentChat() {
       title: deriveTitle(nextMessages),
       updatedAt: Date.now(),
     }
-    persist()
+    if (options?.persist !== false)
+      persist()
   }
 
   async function sendMessage(content: string) {
     const question = content.trim()
     if (!question || loading.value)
       return
+
+    auth.hydrate()
+    if (!auth.isLoggedIn.value) {
+      error.value = '请先登录后再聊天'
+      return
+    }
 
     let session = activeSession.value
     if (!session) {
@@ -158,27 +170,81 @@ export function useAgentChat() {
     loading.value = true
     error.value = ''
 
+    let receivedContent = false
+
     try {
-      const data = await sendAgentChat({
+      await sendAgentChatStream({
         session_id: sessionId,
-        user_id: auth.isLoggedIn.value
-          ? String(auth.user.value?.id ?? 'guest')
-          : 'guest',
+        user_id: String(auth.user.value?.id ?? ''),
         question,
+      }, {
+        onChunk(chunk) {
+          if (chunk.content) {
+            if (!receivedContent) {
+              receivedContent = true
+              const assistantMessage: ChatMessage = {
+                id: chunk.message_id || createId(),
+                role: 'assistant',
+                content: chunk.content,
+                timestamp: Date.now(),
+                streaming: true,
+              }
+              updateSessionMessages(sessionId, messages => [...messages, assistantMessage], { persist: false })
+            }
+            else {
+              updateSessionMessages(sessionId, (messages) => {
+                const last = messages[messages.length - 1]
+                if (last?.role !== 'assistant')
+                  return messages
+                return [
+                  ...messages.slice(0, -1),
+                  {
+                    ...last,
+                    id: chunk.message_id || last.id,
+                    content: last.content + chunk.content,
+                  },
+                ]
+              }, { persist: false })
+            }
+          }
+
+          if (chunk.done) {
+            updateSessionMessages(sessionId, (messages) => {
+              const last = messages[messages.length - 1]
+              if (last?.role !== 'assistant')
+                return messages
+              return [
+                ...messages.slice(0, -1),
+                {
+                  ...last,
+                  id: chunk.message_id || last.id,
+                  streaming: false,
+                },
+              ]
+            })
+          }
+        },
       })
 
-      const assistantMessage: ChatMessage = {
-        id: data.message_id,
-        role: 'assistant',
-        content: data.answer,
-        timestamp: data.timestamp * 1000,
-      }
-
-      updateSessionMessages(sessionId, messages => [...messages, assistantMessage])
+      if (!receivedContent)
+        throw new Error('未收到回复，请稍后重试')
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : '发送失败，请稍后重试'
-      updateSessionMessages(sessionId, messages => messages.slice(0, -1))
+      if (!receivedContent) {
+        updateSessionMessages(sessionId, messages => messages.slice(0, -1))
+      }
+      else {
+        updateSessionMessages(sessionId, (messages) => {
+          const last = messages[messages.length - 1]
+          if (last?.role !== 'assistant')
+            return messages
+          return [
+            ...messages.slice(0, -1),
+            { ...last, streaming: false },
+          ]
+        })
+      }
     }
     finally {
       loading.value = false

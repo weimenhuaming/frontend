@@ -36,6 +36,14 @@ const replyTarget = ref<CommentInfo | null>(null)
 const replyContent = ref('')
 const submitting = ref(false)
 const deleting = ref(false)
+const deleteTarget = ref<{ id: number, isRoot: boolean } | null>(null)
+const deleteDialogOpen = computed({
+  get: () => deleteTarget.value !== null,
+  set: (open: boolean) => {
+    if (!open)
+      deleteTarget.value = null
+  },
+})
 
 const REPLY_PAGE_SIZE = 5
 
@@ -164,20 +172,27 @@ async function submitReply() {
   }
 }
 
-async function handleDelete(id: number, isRoot: boolean) {
-  if (!confirm('确定删除这条评论吗？'))
+function handleDelete(id: number, isRoot: boolean) {
+  deleteTarget.value = { id, isRoot }
+}
+
+async function confirmDelete() {
+  const target = deleteTarget.value
+  if (!target)
     return
+
   deleting.value = true
   try {
-    await deleteComment(id)
-    if (isRoot) {
-      emit('deleted', id)
+    await deleteComment(target.id)
+    if (target.isRoot) {
+      emit('deleted', target.id)
     }
     else {
-      replies.value = replies.value.filter(r => r.id !== id)
+      replies.value = replies.value.filter(r => r.id !== target.id)
       repliesTotal.value = Math.max(0, repliesTotal.value - 1)
       emit('countChange', -1)
     }
+    deleteTarget.value = null
   }
   catch (e) {
     alert(e instanceof Error ? e.message : '删除失败')
@@ -355,6 +370,15 @@ function isOwn(userId: number) {
         </button>
       </div>
     </div>
+    <ConfirmDialog
+      v-model="deleteDialogOpen"
+      title="删除评论"
+      message="确定删除这条评论吗？"
+      confirm-text="删除"
+      danger
+      :loading="deleting"
+      @confirm="confirmDelete"
+    />
   </article>
 </template>
 

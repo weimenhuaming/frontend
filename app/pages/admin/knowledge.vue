@@ -20,6 +20,14 @@ const error = ref('')
 const success = ref('')
 const actionName = ref('')
 const activeCollection = useState<string | null>('knowledge-active-collection', () => null)
+const deleteTarget = ref<KnowledgeCollectionInfo | null>(null)
+const deleteDialogOpen = computed({
+  get: () => deleteTarget.value !== null,
+  set: (open: boolean) => {
+    if (!open)
+      deleteTarget.value = null
+  },
+})
 
 const { data: collectionsData, pending, refresh } = await useAsyncData(
   'admin-knowledge-collections',
@@ -91,8 +99,13 @@ async function onSwitch(item: KnowledgeCollectionInfo) {
   }
 }
 
-async function onDelete(item: KnowledgeCollectionInfo) {
-  if (!confirm(`确定删除知识库「${item.name}」吗？删除后不可恢复。`))
+function onDelete(item: KnowledgeCollectionInfo) {
+  deleteTarget.value = item
+}
+
+async function confirmDelete() {
+  const item = deleteTarget.value
+  if (!item)
     return
 
   clearMessages()
@@ -103,6 +116,7 @@ async function onDelete(item: KnowledgeCollectionInfo) {
     if (activeCollection.value === item.name)
       activeCollection.value = null
     success.value = `已删除「${item.name}」`
+    deleteTarget.value = null
     await refresh()
   }
   catch (e: unknown) {
@@ -306,6 +320,16 @@ function isBusy(name: string) {
         </article>
       </div>
     </section>
+
+    <ConfirmDialog
+      v-model="deleteDialogOpen"
+      title="删除知识库"
+      :message="deleteTarget ? `确定删除知识库「${deleteTarget.name}」吗？删除后不可恢复。` : ''"
+      confirm-text="删除"
+      danger
+      :loading="loading && !!deleteTarget && actionName === deleteTarget.name"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 

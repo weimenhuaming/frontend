@@ -44,7 +44,19 @@ defineExpose({ focus, resizeTextarea })
 <template>
   <div class="agent-composer">
     <p v-if="error" class="agent-composer__error" role="alert">
-      {{ error }}
+      <template v-if="error.includes('登录')">
+        请先
+        <NuxtLink
+          :to="{ path: '/auth/login', query: { redirect: $route.fullPath } }"
+          class="agent-composer__login-link"
+        >
+          登录
+        </NuxtLink>
+        后再聊天
+      </template>
+      <template v-else>
+        {{ error }}
+      </template>
     </p>
     <form class="agent-composer__box" @submit.prevent="emit('submit')">
       <textarea
@@ -85,6 +97,17 @@ defineExpose({ focus, resizeTextarea })
   background: #fef2f2;
   color: #b91c1c;
   font-size: 0.8125rem;
+}
+
+.agent-composer__login-link {
+  color: #b91c1c;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.agent-composer__login-link:hover {
+  color: #991b1b;
 }
 
 .agent-composer__box {

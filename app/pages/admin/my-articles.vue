@@ -15,6 +15,14 @@ const page = ref(1)
 const pageSize = 10
 const error = ref('')
 const actionId = ref<number | null>(null)
+const deleteTarget = ref<ArticleInfo | null>(null)
+const deleteDialogOpen = computed({
+  get: () => deleteTarget.value !== null,
+  set: (open: boolean) => {
+    if (!open)
+      deleteTarget.value = null
+  },
+})
 
 const { data: categoriesData } = await useAsyncData('admin-my-categories', () => listCategories())
 
@@ -46,14 +54,20 @@ async function loadPage(next: number) {
   await refresh()
 }
 
-async function onDelete(article: ArticleInfo) {
-  if (!confirm(`确定删除文章「${article.title}」吗？`))
+function onDelete(article: ArticleInfo) {
+  deleteTarget.value = article
+}
+
+async function confirmDelete() {
+  const article = deleteTarget.value
+  if (!article)
     return
 
   error.value = ''
   actionId.value = article.id
   try {
     await deleteArticle(article.id)
+    deleteTarget.value = null
     await refresh()
   }
   catch (e: unknown) {
@@ -180,6 +194,16 @@ function formatDate(dateStr: string) {
         下一页
       </button>
     </div>
+
+    <ConfirmDialog
+      v-model="deleteDialogOpen"
+      title="删除文章"
+      :message="deleteTarget ? `确定删除文章「${deleteTarget.title}」吗？` : ''"
+      confirm-text="删除"
+      danger
+      :loading="!!deleteTarget && actionId === deleteTarget.id"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 

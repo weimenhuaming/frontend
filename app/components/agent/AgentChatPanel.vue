@@ -24,6 +24,13 @@ const suggestions = [
 
 const isEmpty = computed(() => props.messages.length === 0 && !props.loading)
 
+const showTyping = computed(() => {
+  if (!props.loading)
+    return false
+  const last = props.messages[props.messages.length - 1]
+  return !last || last.role === 'user'
+})
+
 function submit() {
   const content = input.value.trim()
   if (!content || props.loading)
@@ -43,17 +50,20 @@ function useSuggestion(text: string) {
   })
 }
 
-watch(() => props.messages.length, () => {
+function scrollToBottom() {
   nextTick(() => {
     messagesEnd.value?.scrollIntoView({ behavior: 'smooth' })
   })
-})
+}
 
-watch(() => props.loading, () => {
-  nextTick(() => {
-    messagesEnd.value?.scrollIntoView({ behavior: 'smooth' })
-  })
-})
+watch(() => props.messages.length, scrollToBottom)
+
+watch(() => props.loading, scrollToBottom)
+
+watch(
+  () => props.messages[props.messages.length - 1]?.content,
+  scrollToBottom,
+)
 </script>
 
 <template>
@@ -100,7 +110,7 @@ watch(() => props.loading, () => {
             :key="message.id"
             :message="message"
           />
-          <div v-if="loading" class="agent-chat__typing">
+          <div v-if="showTyping" class="agent-chat__typing">
             <span class="agent-chat__typing-dot" />
             <span class="agent-chat__typing-dot" />
             <span class="agent-chat__typing-dot" />
