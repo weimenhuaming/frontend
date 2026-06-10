@@ -33,6 +33,30 @@ body {
   color: var(--color-text);
   line-height: 1.6;
   min-height: 100vh;
+  cursor: url('/cursors/default.svg') 4 3, auto;
+}
+
+a,
+button,
+[role='button'],
+label[for],
+select,
+summary,
+input[type='checkbox'],
+input[type='radio'],
+.cursor-pointer {
+  cursor: url('/cursors/pointer.svg') 4 3, pointer !important;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='button']):not([type='submit']):not([type='reset']),
+textarea,
+[contenteditable='true'] {
+  cursor: text;
+}
+
+[disabled],
+.is-disabled {
+  cursor: not-allowed;
 }
 
 a {

@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM docker.m.daocloud.io/library/node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ ENV NUXT_API_PROXY_TARGET=${NUXT_API_PROXY_TARGET}
 
 RUN npm run build
 
-FROM node:22-alpine
+FROM docker.m.daocloud.io/library/node:22-alpine
 
 WORKDIR /app
 

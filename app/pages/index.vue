@@ -27,6 +27,7 @@ const randomRecommend = {
 }
 
 const GREET_AVATAR = '/images/avatar.png'
+const HERO_IMAGE = '/images/hero-sky.png'
 
 let greetTimer: ReturnType<typeof setInterval> | null = null
 
@@ -46,7 +47,13 @@ onUnmounted(() => {
   <div class="bento">
     <main class="bento__center">
       <div class="bento__hero card">
-        <span class="bento__hero-placeholder">图片待定</span>
+        <img
+          :src="HERO_IMAGE"
+          alt="晴空与云朵"
+          class="bento__hero-img"
+          loading="eager"
+          decoding="async"
+        >
       </div>
 
       <div class="bento__greet card">
@@ -168,21 +175,17 @@ onUnmounted(() => {
 }
 
 .bento__hero {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  padding: 0;
   min-height: 130px;
-  background: linear-gradient(135deg, #fff 0%, var(--home-accent-pale) 100%);
-  color: #94a3b8;
-  font-size: 0.95rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
 }
 
-.bento__hero-placeholder {
-  padding: 0.4rem 1rem;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 75%);
+.bento__hero-img {
+  display: block;
+  width: 100%;
+  min-height: 130px;
+  object-fit: cover;
+  object-position: center;
 }
 
 .bento__greet {
