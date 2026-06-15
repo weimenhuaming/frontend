@@ -7,6 +7,7 @@ const navItems = [
   { label: '站内助手', to: '/agent', icon: 'ai' },
   { label: '个人中心', to: '/admin/profile', icon: 'user' },
   { label: '文章专栏', to: '/blog', icon: 'article' },
+  { label: '生活小记', to: '/life', icon: 'life' },
   { label: '关于网站', to: '/about', icon: 'about' },
 ]
 
@@ -168,6 +169,13 @@ onUnmounted(() => {
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 <path d="M8 7h8M8 11h8M8 15h5" />
+              </svg>
+              <svg v-else-if="item.icon === 'life'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="3.2" />
+                <circle cx="16.5" cy="12" r="3.2" />
+                <circle cx="12" cy="16" r="3.2" />
+                <circle cx="7.5" cy="12" r="3.2" />
+                <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
               </svg>
               <svg v-else-if="item.icon === 'about'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10" />

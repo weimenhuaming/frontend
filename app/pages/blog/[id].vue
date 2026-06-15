@@ -10,6 +10,7 @@ definePageMeta({ layout: 'home' })
 const route = useRoute()
 const config = useRuntimeConfig()
 
+
 const articleId = computed(() => {
   const id = Number(route.params.id)
   return Number.isFinite(id) && id > 0 ? id : null
