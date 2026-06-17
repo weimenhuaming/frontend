@@ -5,7 +5,6 @@ useSeoMeta({ title: 'Chenaqi Blog' })
 
 const GITHUB_URL = 'https://github.com/weimenhuaming'
 const BILIBILI_URL = 'https://space.bilibili.com'
-const EMAIL_URL = 'mailto:hello@chenaqi.tech'
 
 const now = ref(new Date())
 
@@ -18,12 +17,10 @@ const greeting = computed(() => {
   return 'Good Evening'
 })
 
-const randomRecommend = {
-  tag: '随机推荐',
-  title: 'CMU 15-445',
-  subtitle: '& 大数据',
-  desc: '一些Lab、笔记、文档笔记、讨论…',
-  meta: 'Views: 18,367  Marks: 120',
+const shareEntry = {
+  tag: '分享文章',
+  title: '分享与友链',
+  subtitle: '友链 · 推荐',
 }
 
 const GREET_AVATAR = '/images/avatar.png'
@@ -93,33 +90,23 @@ onUnmounted(() => {
           </svg>
           bilibili
         </a>
-        <a
-          :href="EMAIL_URL"
-          class="bento__social-icon"
-          aria-label="Email"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="4" width="20" height="16" rx="3" />
-            <path d="m2 7 10 6 10-6" />
-          </svg>
-        </a>
       </div>
 
       <div class="bento__bottom">
         <HomeLikeButton class="bento__like" />
 
         <NuxtLink to="/share" class="bento__recommend card">
-          <span class="bento__recommend-icon" aria-hidden="true">
-            <span>CMU</span>
-            <span class="bento__recommend-icon-sub">15-445</span>
+          <span class="bento__recommend-icon bento__recommend-icon--share" aria-hidden="true">
+            <span>分享</span>
+            <span class="bento__recommend-icon-sub">友链</span>
           </span>
 
           <div class="bento__recommend-info">
             <p class="bento__recommend-title">
-              {{ randomRecommend.title }}
-              <span class="bento__recommend-subtitle">{{ randomRecommend.subtitle }}</span>
+              {{ shareEntry.title }}
+              <span class="bento__recommend-subtitle">{{ shareEntry.subtitle }}</span>
             </p>
-            <p class="bento__recommend-tag">{{ randomRecommend.tag }}</p>
+            <p class="bento__recommend-tag">{{ shareEntry.tag }}</p>
           </div>
 
           <span class="bento__recommend-arrow" aria-hidden="true">
@@ -329,6 +316,10 @@ onUnmounted(() => {
 .bento__recommend:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 28px var(--home-shadow);
+}
+
+.bento__recommend-icon--share {
+  background: linear-gradient(135deg, var(--home-accent-soft), var(--home-accent));
 }
 
 .bento__recommend-icon {

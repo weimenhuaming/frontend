@@ -6,10 +6,43 @@ const props = defineProps<{
   message: ChatMessage
 }>()
 
+const copied = ref(false)
+
+let copyTimer: ReturnType<typeof setTimeout> | null = null
+
 const renderedHtml = computed(() => {
   if (props.message.role !== 'assistant')
     return ''
   return renderMarkdown(props.message.content).html
+})
+
+const canCopy = computed(() =>
+  props.message.role === 'assistant'
+  && !!props.message.content
+  && !props.message.streaming,
+)
+
+async function copyContent() {
+  if (!canCopy.value)
+    return
+
+  try {
+    await navigator.clipboard.writeText(props.message.content)
+    copied.value = true
+    if (copyTimer)
+      clearTimeout(copyTimer)
+    copyTimer = setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  }
+  catch {
+    // ignore clipboard errors
+  }
+}
+
+onUnmounted(() => {
+  if (copyTimer)
+    clearTimeout(copyTimer)
 })
 </script>
 
@@ -23,9 +56,28 @@ const renderedHtml = computed(() => {
       <template v-else>我</template>
     </div>
     <div class="agent-message__body">
-      <p class="agent-message__role">
-        {{ message.role === 'assistant' ? '站内助手' : '你' }}
-      </p>
+      <div class="agent-message__header">
+        <p class="agent-message__role">
+          {{ message.role === 'assistant' ? '站内助手' : '你' }}
+        </p>
+        <button
+          v-if="canCopy"
+          type="button"
+          class="agent-message__copy"
+          :class="{ 'agent-message__copy--done': copied }"
+          :aria-label="copied ? '已复制' : '复制回复'"
+          @click="copyContent"
+        >
+          <svg v-if="!copied" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          <span>{{ copied ? '已复制' : '复制' }}</span>
+        </button>
+      </div>
       <div
         v-if="message.role === 'assistant'"
         class="agent-message__content markdown-body"
@@ -83,11 +135,54 @@ const renderedHtml = computed(() => {
   align-items: flex-end;
 }
 
+.agent-message__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
 .agent-message__role {
-  margin: 0 0 0.35rem;
+  margin: 0;
   font-size: 0.75rem;
   font-weight: 600;
   color: #6b7280;
+}
+
+.agent-message__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.agent-message:hover .agent-message__copy,
+.agent-message__copy:focus-visible {
+  opacity: 1;
+}
+
+.agent-message__copy:hover {
+  color: #4b5563;
+  background: #f3f4f6;
+}
+
+.agent-message__copy--done {
+  opacity: 1;
+  color: var(--home-accent-dark);
+}
+
+.agent-message__copy svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .agent-message__content {
