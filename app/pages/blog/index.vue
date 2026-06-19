@@ -12,23 +12,12 @@ const config = useRuntimeConfig()
 const PAGE_SIZE = 20
 
 const searchTerm = ref('')
-const debouncedSearch = ref('')
+const activeSearchKeyword = ref('')
 const selectedCategoryId = ref<number | 'all'>('all')
 
-let searchTimer: ReturnType<typeof setTimeout> | null = null
-
-watch(searchTerm, (value) => {
-  if (searchTimer)
-    clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    debouncedSearch.value = value
-  }, 300)
-})
-
-onUnmounted(() => {
-  if (searchTimer)
-    clearTimeout(searchTimer)
-})
+function submitSearch() {
+  activeSearchKeyword.value = searchTerm.value.trim()
+}
 
 const { data: categoriesData } = await useAsyncData('blog-categories', () => listCategories())
 
@@ -42,7 +31,7 @@ const categoryNameMap = computed(() => {
 })
 
 async function fetchArticles() {
-  const keyword = debouncedSearch.value.trim()
+  const keyword = activeSearchKeyword.value
   const categoryId = selectedCategoryId.value
 
   if (keyword) {
@@ -71,7 +60,7 @@ async function fetchArticles() {
 const { data: articlesData, pending, error } = await useAsyncData(
   'blog-articles',
   fetchArticles,
-  { watch: [selectedCategoryId, debouncedSearch] },
+  { watch: [selectedCategoryId, activeSearchKeyword] },
 )
 
 const articles = computed(() => articlesData.value?.articles ?? [])
@@ -103,7 +92,7 @@ function getThumbLabel(article: { title: string, category_id: number }) {
 <template>
   <div class="blog-page">
     <header class="blog-page__header">
-      <label class="blog-page__search card">
+      <div class="blog-page__search card">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
           <path d="M20 20l-3.5-3.5" />
@@ -112,8 +101,16 @@ function getThumbLabel(article: { title: string, category_id: number }) {
           v-model="searchTerm"
           type="search"
           placeholder="搜索文章..."
+          @keydown.enter="submitSearch"
         >
-      </label>
+        <button
+          type="button"
+          class="blog-page__search-btn"
+          @click="submitSearch"
+        >
+          搜索
+        </button>
+      </div>
 
       <div class="blog-page__filters">
         <button
@@ -271,6 +268,28 @@ function getThumbLabel(article: { title: string, category_id: number }) {
 
 .blog-page__search input::placeholder {
   color: #9ca3af;
+}
+
+.blog-page__search-btn {
+  flex-shrink: 0;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--home-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.blog-page__search-btn:hover {
+  background: var(--home-accent-dark);
+}
+
+.blog-page__search-btn:active {
+  transform: scale(0.97);
 }
 
 .blog-page__filters {
