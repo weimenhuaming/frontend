@@ -155,16 +155,12 @@ docker compose -f docker-compose.local.yml up -d --build
 
 ### 方式二：接入后端 Docker 网络
 
-先启动后端（创建 `chenaqi-net`）：
+前后端共用 `chenaqi-net`，**谁先启动都可以**：
 
 ```bash
 cd backend/deploy
 docker compose up -d --build
-```
 
-再启动前端：
-
-```bash
 cd frontend/deploy
 docker compose -f docker-compose.network.yml up -d --build
 ```
@@ -262,7 +258,7 @@ routeRules: {
 <details>
 <summary><strong>network chenaqi-net not found？</strong></summary>
 
-使用 `docker-compose.network.yml` 前须先启动 `backend/deploy` 创建网络。仅联调宿主机 Gateway 时改用 `docker-compose.local.yml`。
+前后端 compose 均已配置同名 `chenaqi-net`，任意一方先启动即可。仅联调宿主机 Gateway 时改用 `docker-compose.local.yml`。
 </details>
 
 <details>

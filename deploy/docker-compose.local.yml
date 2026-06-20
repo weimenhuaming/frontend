@@ -1,15 +1,23 @@
-# 本地开发：前端容器访问宿主机 Gateway（GoLand 等，无需 Docker 后端）
+# 联调 Docker 后端：与 backend/deploy 共用 chenaqi-net，谁先启动都可以
+# 启动：docker compose -f docker-compose.network.yml up -d --build
 services:
   frontend:
     build:
       context: ..
       dockerfile: Dockerfile
       args:
-        NUXT_API_PROXY_TARGET: http://host.docker.internal:9000
+        NUXT_API_PROXY_TARGET: http://gateway:9000
     container_name: frontend
     ports:
       - "3000:3000"
     environment:
       NUXT_HOST: 0.0.0.0
       NUXT_PORT: 3000
+    networks:
+      - chenaqi-net
     restart: unless-stopped
+
+networks:
+  chenaqi-net:
+    name: chenaqi-net
+    driver: bridge
